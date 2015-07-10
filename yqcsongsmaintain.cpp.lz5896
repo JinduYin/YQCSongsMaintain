@@ -1,0 +1,1683 @@
+#include "yqcsongsmaintain.h"
+#include "ui_yqcsongsmaintain.h"
+#include "enuminfo.h"
+#include "yqcdelegate.h"
+#include "MP4Player.h"
+#include "mysqlquery.h"
+#include "activitylabel.h"
+#include "curlupload.h"
+#include "pagingtablewidget.h"
+#include "addfmmedialist.h"
+#include "defistruct.h"
+#include "liblistview.h"
+//#include "libitemdelegate.h"
+
+#include <QListWidgetItem>
+#include <QVector>
+#include <QSettings>
+#include <QMenu>
+#include <QFile>
+#include <QIcon>
+#include <QDebug>
+#include <QPoint>
+#include <QPair>
+#include <QList>
+#include <QMessageBox>
+#include <QWindow>
+
+#define DATABASE_NAME "yiqiding_ktv" //yiqiding_ktv
+#define DEFAULT_ROWHEIGHT 50
+#define DEFAULT_MINNUM   10
+#define DEFAULT_ROWCOUNT 20  //每页默认行数
+#define DEFAULT_FMNUM  3
+#define DEFAULT_ROWNUMOFPAGE 10
+
+#define UPLOAD_TYPE "avatar"
+
+YQCSongsMaintain::YQCSongsMaintain(QWidget *parent) :
+    QMainWindow(parent),
+    ui(new Ui::YQCSongsMaintain)
+{
+    ui->setupUi(this);
+    this->setWindowState(Qt::WindowMaximized);
+    ui->listWidget->setBackgroundRole( QPalette::NoRole);
+    connect(this, &YQCSongsMaintain::listCurrentRowChanged,
+            ui->stackedWidget, &QStackedWidget::setCurrentIndex);
+
+//    LibItemDelegate *delegate = new LibItemDelegate(this);
+//    delegate->setListWidget(ui->listWidget);
+//    ui->listWidget->setItemDelegate(delegate);
+
+    loadStyleSheet();
+    initArgument();
+    initWidgetList();
+
+    ///LIB
+    initMeidaLib();
+
+    ///cha xun
+    initComboboxMedia();
+    initQueryTableWidetMedia();
+
+    initComboboxActor();
+    initQueryTableWidetActor();
+
+    ///shang xian
+
+    initWidgetOnline();
+
+    /// pai hang bang
+    initWidgetMediaList();
+
+    ///hei ming dan
+    initblack();
+    initBlackACtionMenu();
+
+    ///she zhi
+    initSetInfoList();
+
+    initFM();
+
+    qDebug() << " height : " << this->height();
+    qDebug() << " width : " << this->width();
+}
+
+YQCSongsMaintain::~YQCSongsMaintain()
+{
+    _sql->closeMysql(DATABASE_NAME);
+    delete ui;
+}
+
+void YQCSongsMaintain::loadStyleSheet()
+{
+//    QString style("background:rgb(248, 248,248);"
+//                  "border:1px solid rgb(235, 235, 235);"
+//                  "border-radius:5px;");
+//    ui->centralWidget->setStyleSheet("background:rgb(235, 235, 235);");
+//    ui->listWidget->setStyleSheet("\
+//                        background:rgb(248, 248,248);\
+//                        border:1px solid rgb(235, 235, 235);\
+//                        border-radius:5px;\
+//                        font-color:rgb(88, 88, 88);\
+//                        font-size:14px;\
+//                        ");
+//    ui->listWidget->setStyleSheet("background:rgb(248, 248,248);");
+//    ui->stackedWidget->setStyleSheet(style);
+
+//    QFile qss(":/qss/YQCML.qss");
+//    qss.open(QFile::ReadOnly);
+//    this->stac
+//    qApp->setStyleSheet(qss.readAll());
+//    qss.close();
+}
+
+void YQCSongsMaintain::initArgument()
+{    
+    readConfig = new QSettings("SongsMaintain.conf", QSettings::IniFormat);
+    readConfig->setIniCodec("UTF-8");
+
+    _sql = new MysqlQuery();
+    _sql->openMysql(DATABASE_NAME);
+
+    for(int i=0; i<5; i++){
+        songsLibCheckFlag[i] = false;
+    }
+    songsLibOnlineFlag = false;
+    songsListFlag = false;
+    blackFlag = false;
+
+    currentRow = 0;    
+
+    fmCurrentPage = 0;
+    fmTotalPage = 0;
+    fmTotalRows = 0;
+    fmListFlag = -1;
+
+    mediaCurPage = 0;
+    mediaCount = DEFAULT_ROWCOUNT;
+}
+
+void YQCSongsMaintain::initWidgetList()
+{
+//    QFile qss(":/qss/LibItem.qss");
+//    qss.open(QFile::ReadOnly);
+//    ui->listWidget->setStyleSheet(qss.readAll());
+//    qss.close();
+
+    QVector<int> widgetlist;
+    widgetlist.append(widItem_songs);
+    widgetlist.append(widItem_singer);
+    widgetlist.append(widItem_songsOnline);
+    widgetlist.append(widItem_singerOnline);
+
+    widgetlist.append(widItem_listNew);
+    widgetlist.append(widItem_listChinese);
+    widgetlist.append(widItem_listHot);
+    widgetlist.append(widItem_listNet);
+    widgetlist.append(widItem_listHi);
+    widgetlist.append(widItem_listbillboard);
+
+    widgetlist.append(widItem_blackMusic);
+    widgetlist.append(widItem_blackSinger);
+
+    widgetlist.append(widItem_songsInfo);
+    widgetlist.append(widItem_singerInfo);
+    widgetlist.append(widItem_listInfo);
+
+    for(int i=0; i<widgetlist.size(); i++){
+        QListWidgetItem *item = ui->listWidget->item(widgetlist.at(i));
+        ui->listWidget->setItemHidden(item, true);
+    }
+}
+
+void YQCSongsMaintain::listWdigetItemHidden(int &_currentRow)
+{
+    QVector<int> itemList;
+    QPixmap pixmapDown(":/arrow/images/expansion.png");
+    QPixmap pixmapRight(":/arrow/images/receives01.png");
+    QListWidgetItem *item = NULL;
+    bool _flag = false;
+    int _index = 0;
+    if (_currentRow == widItem_songsLib){
+        item = ui->listWidget->item(widItem_songsLib);
+        itemList.clear();
+        itemList.append(widItem_songs);
+        itemList.append(widItem_singer);
+        _flag = true;
+        _index = 0;
+    }else if(_currentRow == widItem_songsLibOnline){
+        item = ui->listWidget->item(widItem_songsLibOnline);
+        itemList.clear();
+        itemList.append(widItem_songsOnline);
+        itemList.append(widItem_singerOnline);
+        _flag = true;
+        _index = 1;
+    }else if(_currentRow == widItem_list){
+        item = ui->listWidget->item(widItem_list);
+        itemList.clear();
+        itemList.append(widItem_listNew);
+        itemList.append(widItem_listChinese);
+        itemList.append(widItem_listHot);
+        itemList.append(widItem_listNet);
+        itemList.append(widItem_listHi);
+        itemList.append(widItem_listbillboard);
+        _flag = true;
+        _index = 2;
+    }else if(_currentRow == widItem_black){
+        item = ui->listWidget->item(widItem_black);
+        itemList.clear();
+        itemList.append(widItem_blackMusic);
+        itemList.append(widItem_blackSinger);
+        _flag = true;
+        _index = 3;
+    }else if(_currentRow == widItem_setInfo){
+        item = ui->listWidget->item(widItem_setInfo);
+        itemList.clear();
+        itemList.append(widItem_songsInfo);
+        itemList.append(widItem_singerInfo);
+        itemList.append(widItem_listInfo);
+        _flag = true;
+        _index = 4;
+    }
+
+    if( _flag && songsLibCheckFlag[_index] == false){
+        for(int i=0; i<itemList.size(); i++){
+            QListWidgetItem *itemlib = ui->listWidget->item(itemList.at(i));
+            ui->listWidget->setItemHidden(itemlib, false);
+        }
+        item->setIcon(pixmapDown);
+        songsLibCheckFlag[_index] = true;
+    }else if(_flag && songsLibCheckFlag[_index] == true){ //
+        for(int i=0; i<itemList.size(); i++){
+            QListWidgetItem *itemlib = ui->listWidget->item(itemList.at(i));
+            ui->listWidget->setItemHidden(itemlib, true);
+        }
+        item->setIcon(pixmapRight);
+        songsLibCheckFlag[_index] = false;
+    }
+}
+
+void YQCSongsMaintain::on_listWidget_clicked(const QModelIndex &index)
+{    
+    currentRow = index.row();
+    listWdigetItemHidden(currentRow);
+
+    int indexId = -1;
+    if ( currentRow == widItem_LibTotal ){
+        indexId = stacked_total;
+    }else if(currentRow == widItem_songs){
+        indexId = stacked_mediaquery;
+        initMediaValue();
+    }else if(currentRow == widItem_singer){
+        indexId = stacked_actorquery;
+        initActorValue();
+    }else if(currentRow == widItem_songsOnline){
+        indexId = stacked_mediaonline;
+
+    }else if(currentRow == widItem_singerOnline){
+        indexId = stacked_actoronline;
+
+    }else if(currentRow == widItem_listNew
+             || currentRow == widItem_listChinese
+             || currentRow == widItem_listHot
+             || currentRow == widItem_listNet
+             || currentRow == widItem_listHi
+             || currentRow == widItem_listbillboard ){            
+            indexId = stacked_medialist;
+
+    }else if(currentRow == widItem_FM){
+        indexId = stacked_FMlist;
+        initFmValue();
+    }else if(currentRow == widItem_AD){
+        indexId = stacked_adlist;
+    } else if(currentRow == widItem_blackMusic){
+        indexId = stacked_mediablack;
+        initBlack_Media();
+    }else if(currentRow == widItem_blackSinger){
+        indexId = stacked_actorblack;
+        initBlack_Actor();
+    }else if( currentRow == widItem_songsInfo
+              || currentRow == widItem_singerInfo
+              || currentRow == widItem_listInfo){        
+        indexId = stacked_setmediainfo;
+        initSetInfoList();
+    }
+
+    if (indexId != -1)
+        listCurrentRowChanged(indexId);
+}
+
+
+void YQCSongsMaintain::initMeidaLib()
+{
+    initTableWidgetLib();
+
+    QList< QPair<QString, qint64> > listM;
+    qint64 totalM, enabledM, disabledM, matchM, blackM;
+    QSqlQuery language, type;
+    _sql->queryCountTotal_M(totalM);
+    _sql->queryCountEnabled_M(enabledM);
+    _sql->queryCountDisabled_M(disabledM);
+    _sql->queryCountIsMatch_M(matchM);
+    _sql->queryCountBlack_M(blackM);
+    _sql->queryCountLanguage_M(language);
+    _sql->queryCountType_M(type);
+    listM.clear();
+
+    listM.append(QPair<QString, qint64>("全部歌曲", totalM));
+    listM.append(QPair<QString, qint64>("启用歌曲", enabledM));
+    listM.append(QPair<QString, qint64>("禁用歌曲", disabledM));
+    listM.append(QPair<QString, qint64>("可K歌歌曲", matchM));
+    listM.append(QPair<QString, qint64>("歌曲黑名单", blackM));
+    while(language.next()){
+        listM.append(QPair<QString, qint64>(language.value("_language").toString(), language.value("_count").toLongLong()));
+    }
+    while(type.next()){
+        listM.append(QPair<QString, qint64>(type.value("_type").toString(), type.value("_count").toLongLong()));
+    }
+
+    QList< QPair<QString, qint64> > listA;
+    qint64 totalA, enabledA, disabledA, blackA;
+    QSqlQuery sex, nation;
+//    _sql->queryCountSinger_A(totalA);
+    _sql->queryCountEnabled_A(enabledA);
+    _sql->queryCountDisable_A(disabledA);
+    _sql->queryCountBlack_A(blackA);
+    _sql->queryCountSex_A(sex);
+    _sql->queryCountNation_A(nation);
+    listA.clear();
+    listA.append(QPair<QString, qint64>("全部歌星", totalA));
+    listA.append(QPair<QString, qint64>("启用歌星", enabledA));
+    listA.append(QPair<QString, qint64>("禁用歌星", disabledA));
+    listA.append(QPair<QString, qint64>("歌星黑名单", blackA));
+    while(sex.next()){
+        listA.append(QPair<QString, qint64>(sex.value("_sex").toString(), sex.value("_count").toLongLong()));
+    }
+    while(nation.next()){
+        listA.append(QPair<QString, qint64>(nation.value("_nation").toString(), nation.value("_count").toLongLong()));
+    }
+
+    ui->tableWidget_mediaTotal->setColumnCount(2);
+    ui->tableWidget_mediaTotal->setRowCount(listM.size());
+    ui->tableWidget_singerTotal->setColumnCount(2);
+    ui->tableWidget_singerTotal->setRowCount(listA.size());
+
+    for(int i=0; i<listM.size(); i++){
+        ui->tableWidget_mediaTotal->setItem(i, 0, new QTableWidgetItem(listM.at(i).first));
+        ui->tableWidget_mediaTotal->setItem(i, 1, new QTableWidgetItem(QString::number(listM.at(i).second)));
+    }
+
+    for(int i=0; i<listA.size(); i++){
+        ui->tableWidget_singerTotal->setItem(i, 0, new QTableWidgetItem(listA.at(i).first));
+        ui->tableWidget_singerTotal->setItem(i, 1, new QTableWidgetItem(QString::number(listA.at(i).second)));
+    }
+}
+
+void YQCSongsMaintain::initTableWidgetLib()
+{
+    ui->tableWidget_mediaTotal->horizontalHeader()->setVisible(false);
+    ui->tableWidget_mediaTotal->verticalHeader()->setVisible(false);
+    ui->tableWidget_mediaTotal->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->tableWidget_mediaTotal->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    ui->tableWidget_singerTotal->horizontalHeader()->setVisible(false);
+    ui->tableWidget_singerTotal->verticalHeader()->setVisible(false);
+    ui->tableWidget_singerTotal->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->tableWidget_singerTotal->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+}
+
+void YQCSongsMaintain::initComboboxMedia()
+{
+    QStringList language, type, resolution, quality, source, version, rthym, pitch;
+    _sql->getMediaLanguage(language);
+    _sql->getMediaType(type);
+    _sql->getMediaResolution(resolution);
+    _sql->getMediaQuality(quality);
+    _sql->getMediaSource(source);
+    _sql->getMediaVersion(version);
+    _sql->getMediaRthym(rthym);
+    _sql->getMediaPitch(pitch);
+
+    QString firstStr("全部");
+    language.insert(0, firstStr);
+    type.insert(0, firstStr);
+    resolution.insert(0, firstStr);
+    quality.insert(0, firstStr);
+    source.insert(0, firstStr);
+    version.insert(0, firstStr);
+    rthym.insert(0, firstStr);
+    pitch.insert(0, firstStr);
+
+    ui->comboBox_media_Language->addItems(language);
+    ui->comboBox_media_type->addItems(type);
+    ui->comboBox_media_resolution->addItems(resolution);
+    ui->comboBox_media_quality->addItems(quality);
+    ui->comboBox_media_source->addItems(source);
+    ui->comboBox_media_version->addItems(version);
+    ui->comboBox_media_rthym->addItems(rthym);
+    ui->comboBox_media_pitch->addItems(pitch);
+
+    connect(ui->comboBox_media_Language, SIGNAL(currentIndexChanged(QString)), this, SLOT(currentIndexChanged(QString)));
+    connect(ui->comboBox_media_type, SIGNAL(currentIndexChanged(QString)), this, SLOT(currentIndexChanged(QString)));
+    connect(ui->comboBox_media_resolution, SIGNAL(currentIndexChanged(QString)), this, SLOT(currentIndexChanged(QString)));
+    connect(ui->comboBox_media_quality, SIGNAL(currentIndexChanged(QString)), this, SLOT(currentIndexChanged(QString)));
+    connect(ui->comboBox_media_source, SIGNAL(currentIndexChanged(QString)), this, SLOT(currentIndexChanged(QString)));
+    connect(ui->comboBox_media_version, SIGNAL(currentIndexChanged(QString)), this, SLOT(currentIndexChanged(QString)));
+    connect(ui->comboBox_media_rthym, SIGNAL(currentIndexChanged(QString)), this, SLOT(currentIndexChanged(QString)));
+    connect(ui->comboBox_media_pitch, SIGNAL(currentIndexChanged(QString)), this, SLOT(currentIndexChanged(QString)));
+}
+
+void YQCSongsMaintain::initQueryTableWidetMedia()
+{
+    QStringList headerList;
+    headerList << "SERIAL_ID" << "歌曲名" << "歌星名" << "语种" << "分类" << "音轨" << "启用" << "";// << "" << "";
+
+    ui->widget_media->setHiddenMenu(true);
+    ui->widget_media->tableWidget->setColumnCount(headerList.size());
+    ui->widget_media->tableWidget->setHorizontalHeaderLabels(headerList);
+
+//    connect(ui->widget_media, &PagingTableWidget::updateView, this, &YQCSongsMaintain::show_Media);
+    ui->widget_media->label_showPage->setHidden(true);    
+    connect(ui->widget_media->label_nextPage, &ActivityLabel::clicked, this, &YQCSongsMaintain::next_page_Media);
+    connect(ui->widget_media->label_upPage, &ActivityLabel::clicked, this, &YQCSongsMaintain::up_page_Media);           
+}
+
+void YQCSongsMaintain::initMediaValue()
+{       
+    getQueryCondition(argu);    
+    initLimitArgu(limitArg);
+    show_Media(argu, limitArg);
+}
+
+void YQCSongsMaintain::getQueryCondition(MediaPagingQuery &argu)
+{
+    argu.language = ui->comboBox_media_Language->currentText();
+    argu.type = ui->comboBox_media_type->currentText();
+    argu.resolution = ui->comboBox_media_resolution->currentText();
+    argu.quality = ui->comboBox_media_quality->currentText();
+    argu.source = ui->comboBox_media_source->currentText();
+    argu.version = ui->comboBox_media_version->currentText();
+    argu.rthym = ui->comboBox_media_rthym->currentText();
+    argu.pitch = ui->comboBox_media_pitch->currentText();
+}
+
+void YQCSongsMaintain::next_page_Media()
+{
+    int row = ui->widget_media->tableWidget->rowCount() - 1;
+    if(mediaQuery.size() == 0)
+        return;
+    getQueryCondition(argu);
+    limitArg.curMaxVal = -1;
+    limitArg.curMinVal = ui->widget_media->tableWidget->item(row, medView_serial_id)->text().toLongLong();
+    limitArg.upPage = false;
+    limitArg.nextPage = true;
+    limitArg.limitStart = 0;
+    limitArg.selectFlag = false;
+    limitArg.limitNum = mediaCount;
+
+    show_Media(argu, limitArg);
+}
+
+void YQCSongsMaintain::up_page_Media()
+{
+    if(ui->widget_media->tableWidget->rowCount() <= 0 || mediaQuery.size() == 0)
+        return;
+    getQueryCondition(argu);
+    limitArg.curMaxVal = ui->widget_media->tableWidget->item(0, medView_serial_id)->text().toLongLong();;
+    limitArg.curMinVal = -1;
+    limitArg.upPage = true;
+    limitArg.nextPage = false;
+    limitArg.limitStart = 0;
+    limitArg.selectFlag = false;
+    limitArg.limitNum = mediaCount;
+
+    show_Media(argu, limitArg);
+}
+
+void YQCSongsMaintain::show_Media(const MediaPagingQuery &argu, const LimitArgumnet &limitArg)
+{
+//    if(!_sql->queryMedia(argu, limitArg, mediaQuery)) return;
+    if(mediaQuery.size() == 0) {
+        if (limitArg.selectFlag){
+            ui->widget_media->tableWidget->clearContents();
+        }
+        ui->widget_media->tableWidget->clearContents();
+        return;
+    }
+    ui->widget_media->tableWidget->setRowCount(mediaQuery.size());
+    int row=0;
+    if(limitArg.upPage == false){
+        while(mediaQuery.next()){
+            setTablewidgetMediaValue(mediaQuery, row);
+            row++;
+        }
+    }else{
+        mediaQuery.last();
+        mediaQuery.next();
+        while(mediaQuery.previous()){
+            setTablewidgetMediaValue(mediaQuery, row);
+            row++;
+        }
+    }
+}
+
+void YQCSongsMaintain::setTablewidgetMediaValue(const QSqlQuery &query, const int &row)
+{
+    QString trackStr = QString("原%1 伴%2").arg(query.value("_original_track").toString())
+            .arg(query.value("_sound_track").toString());
+    QString enStr;
+    if(query.value("_enabled").toInt() == 1)
+        enStr = "是";
+    else enStr = "否";
+
+    ui->widget_media->tableWidget->setItem(row, medView_serial_id, new QTableWidgetItem(QString::number(query.value("_serial_id").toLongLong())));
+    ui->widget_media->tableWidget->setItem(row, medView_name, new QTableWidgetItem(query.value("_name").toString()));
+    ui->widget_media->tableWidget->setItem(row, medView_singer, new QTableWidgetItem(query.value("_singer").toString()));
+    ui->widget_media->tableWidget->setItem(row, medView_language, new QTableWidgetItem(query.value("_language").toString()));
+    ui->widget_media->tableWidget->setItem(row, medView_type, new QTableWidgetItem(query.value("_type").toString()));
+    ui->widget_media->tableWidget->setItem(row, medView_original_sound_track, new QTableWidgetItem(trackStr));
+    ui->widget_media->tableWidget->setItem(row, medView_enabled, new QTableWidgetItem(enStr));
+//        ui->widget_media->tableWidget->item(row, fmList_id)->setTextAlignment(Qt::AlignCenter);
+    ui->widget_media->tableWidget->setRowHeight(row, DEFAULT_ROWHEIGHT);
+}
+
+void YQCSongsMaintain::currentIndexChanged(const QString &)
+{
+    getQueryCondition(argu);
+    initLimitArgu(limitArg);
+    limitArg.selectFlag = true;
+    show_Media(argu, limitArg);
+}
+
+void YQCSongsMaintain::initComboboxActor()
+{
+    QStringList sex, nation, stars, enabled;
+    QString str("全部");
+    enabled << str << "启用" << "禁用";
+    _sql->getSex(sex);
+    _sql->getNation(nation);
+
+    sex.insert(0, str);
+    nation.insert(0, str);
+    stars.insert(0, str);
+
+    ui->comboBox_actor_sex->addItems(sex);
+    ui->comboBox_actor_nation->addItems(nation);
+    ui->comboBox_actor_stars->addItems(stars);
+    ui->comboBox_actor_enabled->addItems(enabled);
+
+    connect(ui->comboBox_actor_sex, SIGNAL(currentIndexChanged(QString)), this, SLOT(currentIndexChangedActor(QString)));
+    connect(ui->comboBox_actor_nation, SIGNAL(currentIndexChanged(QString)), this, SLOT(currentIndexChangedActor(QString)));
+    connect(ui->comboBox_actor_stars, SIGNAL(currentIndexChanged(QString)), this, SLOT(currentIndexChangedActor(QString)));
+    connect(ui->comboBox_actor_enabled, SIGNAL(currentIndexChanged(QString)), this, SLOT(currentIndexChangedActor(QString)));
+}
+
+void YQCSongsMaintain::initQueryTableWidetActor()
+{
+    QStringList headerList;
+    headerList << "个性头像" << "SERIAL_ID" << "歌星名称" << "性别" << "区域" << "名称全拼" << "字数" << "";// << "" << "";
+
+    ui->widget_actor->setHiddenMenu(true);
+    ui->widget_actor->tableWidget->setColumnCount(headerList.size());
+    ui->widget_actor->tableWidget->setHorizontalHeaderLabels(headerList);
+    ui->widget_actor->label_showPage->setHidden(true);
+    connect(ui->widget_actor->label_nextPage, &ActivityLabel::clicked, this, &YQCSongsMaintain::next_page_Actor);
+    connect(ui->widget_actor->label_upPage, &ActivityLabel::clicked, this, &YQCSongsMaintain::up_page_Actor);
+}
+
+void YQCSongsMaintain::getQueryConditionActor(ActorPagingQuery &arg)
+{
+//    arg.sex = ui->comboBox_actor_sex->currentText();
+//    arg.nation = ui->comboBox_actor_nation->currentText();
+//    arg.stars = ui->comboBox_actor_stars->currentText();
+//    arg.enabled = ui->comboBox_actor_enabled->currentText();
+}
+
+void YQCSongsMaintain::initActorValue()
+{
+    getQueryConditionActor(argAct);
+    initLimitArgu(limitArgAct);
+    show_Actor(argAct, limitArgAct);
+}
+
+void YQCSongsMaintain::initLimitArgu(LimitArgumnet &limitArg)
+{
+    limitArg.curMaxVal = -1;
+    limitArg.curMinVal = -1;
+    limitArg.upPage = false;
+    limitArg.nextPage = false;
+    limitArg.limitStart = 0;
+    limitArg.limitNum = mediaCount;
+    limitArg.selectFlag = false;
+}
+
+void YQCSongsMaintain::show_Actor(const ActorPagingQuery &arg, const LimitArgumnet &limitArg)
+{
+//    if(!_sql->queryActor(arg, limitArg, actorQuery)) return;
+    if(actorQuery.size() == 0) {
+        if (limitArgAct.selectFlag){
+            ui->widget_actor->tableWidget->clearContents();
+        }
+        return;
+    }
+    ui->widget_actor->tableWidget->setRowCount(actorQuery.size());
+    int row=0;
+    if(limitArg.upPage == false){
+        while(actorQuery.next()){
+            setTablewidgetActorValue(actorQuery, row);
+            row++;
+        }
+    }else{
+        actorQuery.last();
+        actorQuery.next();
+        while(actorQuery.previous()){
+            setTablewidgetActorValue(actorQuery, row);
+            row++;
+        }
+    }
+}
+
+void YQCSongsMaintain::setTablewidgetActorValue(const QSqlQuery &query, const int &row)
+{
+    QString enStr;
+    if(actorQuery.value("_enabled").toInt() == 1)
+        enStr = "是";
+    else enStr = "否";
+
+//            ui->widget_actor->tableWidget->setItem(row, actView_image, new QTableWidgetItem(QString::number(actorQuery.value("_serial_id").toLongLong())));
+    ui->widget_actor->tableWidget->setItem(row, actView_serial_id, new QTableWidgetItem(query.value("_serial_id").toString()));
+    ui->widget_actor->tableWidget->setItem(row, actView_name, new QTableWidgetItem(query.value("_name").toString()));
+    ui->widget_actor->tableWidget->setItem(row, actView_sex, new QTableWidgetItem(query.value("_sex").toString()));
+    ui->widget_actor->tableWidget->setItem(row, actView_nation, new QTableWidgetItem(query.value("_nation").toString()));
+    ui->widget_actor->tableWidget->setItem(row, actView_pinyin, new QTableWidgetItem(query.value("_pinyin").toString()));
+    ui->widget_actor->tableWidget->setItem(row, actView_words, new QTableWidgetItem(query.value("_words").toString()));
+    ui->widget_actor->tableWidget->item(row, actView_words)->setTextAlignment(Qt::AlignCenter);
+    ui->widget_actor->tableWidget->setRowHeight(row, DEFAULT_ROWHEIGHT);
+}
+
+void YQCSongsMaintain::next_page_Actor()
+{
+    int row = ui->widget_actor->tableWidget->rowCount() - 1;
+    if(actorQuery.size() == 0)
+        return;
+    getQueryConditionActor(argAct);
+    limitArgAct.curMaxVal = -1;
+    limitArgAct.curMinVal = ui->widget_actor->tableWidget->item(row, actView_serial_id)->text().toLongLong();
+    limitArgAct.upPage = false;
+    limitArgAct.nextPage = true;
+    limitArgAct.limitStart = 0;
+    limitArgAct.limitNum = mediaCount;
+    limitArgAct.selectFlag = false;
+
+    show_Actor(argAct, limitArgAct);
+}
+
+void YQCSongsMaintain::up_page_Actor()
+{
+    if(ui->widget_actor->tableWidget->rowCount() <= 0 || actorQuery.size() == 0)
+        return;
+    getQueryConditionActor(argAct);
+    limitArgAct.curMaxVal = ui->widget_actor->tableWidget->item(0, actView_serial_id)->text().toLongLong();;
+    limitArgAct.curMinVal = -1;
+    limitArgAct.upPage = true;
+    limitArgAct.nextPage = false;
+    limitArgAct.limitStart = 0;
+    limitArgAct.limitNum = mediaCount;
+    limitArgAct.selectFlag = false;
+
+    show_Actor(argAct, limitArgAct);
+}
+
+void YQCSongsMaintain::currentIndexChangedActor(const QString &)
+{
+    getQueryConditionActor(argAct);
+    initLimitArgu(limitArgAct);
+    limitArgAct.selectFlag = true;
+    show_Actor(argAct, limitArgAct);
+}
+
+void YQCSongsMaintain::initWidgetOnline()
+{
+    QLayout *_layout = ui->horizontalLayout_online_actor_image->layout();
+    _layout->setAlignment(Qt::AlignBottom);
+}
+
+void YQCSongsMaintain::initWidgetMediaList()
+{        
+    ui->widget_mediaList_select->setHidden(true);
+    ui->widget_medialist_type_more->setHidden(true);
+    ui->pushButton_mediaList_filter->setCheckable(true);
+    ui->pushButton_mediaList_type_hidden->setCheckable(true);
+    ui->pushButton_mediaList_filter->setMinimumWidth(80);
+    ui->pushButton_mediaList_add->setMinimumWidth(80);
+    ui->pushButton_mediaList_type_hidden->setStyleSheet("border:0px;");
+
+    ui->pushButton_mediaList_createTime_start->setStyleSheet("border:0px;");
+    ui->pushButton_mediaList_createTime_end->setStyleSheet("border:0px;");
+}
+
+void YQCSongsMaintain::on_pushButton_mediaList_filter_clicked(bool checked)
+{
+    if(checked){
+        ui->pushButton_mediaList_filter->setStyleSheet("background-color: rgb(255, 146, 62);"
+                                                       "border-color: rgb(255, 146, 62);");
+        ui->widget_mediaList_select->setHidden(false);
+    }else{
+        ui->pushButton_mediaList_filter->setStyleSheet("");
+        ui->widget_mediaList_select->setHidden(true);
+    }
+}
+
+void YQCSongsMaintain::on_pushButton_mediaList_type_hidden_clicked(bool checked)
+{
+    QPixmap pixmapDown(":/images/expansion.png");
+    QPixmap pixmapRight(":/images/receives01.png");
+
+    if(checked){
+        ui->pushButton_mediaList_type_hidden->setIcon(pixmapDown);
+        ui->widget_medialist_type_more->setHidden(false);
+    }
+    else{
+        ui->pushButton_mediaList_type_hidden->setIcon(pixmapRight);
+        ui->widget_medialist_type_more->setHidden(true);
+    }
+}
+
+
+void YQCSongsMaintain::initFM()
+{
+    ui->widget_fm_list_01->bottomWidget->setHidden(true);
+    ui->widget_fm_list_02->bottomWidget->setHidden(true);
+    ui->widget_fm_list_03->bottomWidget->setHidden(true);
+    ui->widget_fm_list_01->tableWidget->setFrameShape(QFrame::NoFrame);
+    ui->widget_fm_list_02->tableWidget->setFrameShape(QFrame::NoFrame);
+    ui->widget_fm_list_03->tableWidget->setFrameShape(QFrame::NoFrame);
+
+    connect(ui->widget_fm_list_01, &PagingTableWidget::updateView, this, &YQCSongsMaintain::show_page_FM01);
+    connect(ui->widget_fm_list_02, &PagingTableWidget::updateView, this, &YQCSongsMaintain::show_page_FM02);
+    connect(ui->widget_fm_list_03, &PagingTableWidget::updateView, this, &YQCSongsMaintain::show_page_FM03);
+    connect(ui->widget_fm_list_01, &PagingTableWidget::addMenu, this, &YQCSongsMaintain::addFmRight01);
+    connect(ui->widget_fm_list_02, &PagingTableWidget::addMenu, this, &YQCSongsMaintain::addFmRight02);
+    connect(ui->widget_fm_list_03, &PagingTableWidget::addMenu, this, &YQCSongsMaintain::addFmRight03);
+    connect(ui->label_fm_upPage, &ActivityLabel::clicked, this, &YQCSongsMaintain::fmUppage);
+    connect(ui->label_fm_nextPage, &ActivityLabel::clicked, this, &YQCSongsMaintain::fmNextPage);
+
+    connect(ui->label_fm_delete_01, &ActivityLabel::clicked, this, &YQCSongsMaintain::deleteFmMediaList01);
+    connect(ui->label_fm_delete_02, &ActivityLabel::clicked, this, &YQCSongsMaintain::deleteFmMediaList02);
+    connect(ui->label_fm_delete_03, &ActivityLabel::clicked, this, &YQCSongsMaintain::deleteFmMediaList03);
+
+    connect(ui->label_fm_update_01, &ActivityLabel::clicked, this, &YQCSongsMaintain::updateFmMedialist01);
+    connect(ui->label_fm_update_02, &ActivityLabel::clicked, this, &YQCSongsMaintain::updateFmMedialist02);
+    connect(ui->label_fm_update_03, &ActivityLabel::clicked, this, &YQCSongsMaintain::updateFmMedialist03);
+
+    initAction();
+//    ui->frame_fm_03->setHidden(true);
+//    ui->frame_fm_02->setHidden(true);
+//    tableWidget->setFrameShape(QFrame::Panel);
+//    tableWidget->setFrameShadow(QFrame::Plain);
+
+//    disconnect(ui->widget_fm_list_01, &PagingTableWidget::updateView, 0, 0);
+//    disconnect(ui->widget_fm_list_02, &PagingTableWidget::updateView, 0, 0);
+//    disconnect(ui->widget_fm_list_03, &PagingTableWidget::updateView, 0, 0);
+//    disconnect(ui->label_fm_upPage, &ActivityLabel::clicked, 0, 0);
+//    disconnect(ui->label_fm_nextPage, &ActivityLabel::clicked, 0, 0);
+}
+
+void YQCSongsMaintain::initFmValue()
+{
+    ui->label_fm_title->setText("FM歌单");
+    setFmTableWidetPro(ui->widget_fm_list_01->tableWidget);
+    setFmTableWidetPro(ui->widget_fm_list_02->tableWidget);
+    setFmTableWidetPro(ui->widget_fm_list_03->tableWidget);
+    ui->widget_fm_list_01->setDefaultValue(DEFAULT_ROWNUMOFPAGE);
+    ui->widget_fm_list_02->setDefaultValue(DEFAULT_ROWNUMOFPAGE);
+    ui->widget_fm_list_03->setDefaultValue(DEFAULT_ROWNUMOFPAGE);
+
+    if(!_sql->queryFMSongList(fmLidQuery)) return;
+    ui->label_fm_total->setText(QString("总%1个歌单").arg(fmLidQuery.size()));
+    fmTotalRows = fmLidQuery.size();
+    fmTotalPage =  fmTotalRows/DEFAULT_FMNUM + (bool)(fmTotalRows%DEFAULT_FMNUM);
+    show_FM();
+}
+
+void YQCSongsMaintain::initAction()
+{
+    ui->frame_fm_01->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->frame_fm_02->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->frame_fm_03->setContextMenuPolicy(Qt::CustomContextMenu);
+    fmMenu01 = new QMenu(ui->frame_fm_01);
+    fmMenu02 = new QMenu(ui->frame_fm_02);
+    fmMenu03 = new QMenu(ui->frame_fm_03);
+    fmUpMoveListAC = new QAction("上移", this); //FM歌单
+    fmDownMoveListAC = new QAction("下移", this);
+    fmUpMoveAC = new QAction("上移", this);
+    fmDownMoveAC = new QAction("下移", this);
+    connect(fmUpMoveListAC, &QAction::triggered, this, &YQCSongsMaintain::fmUpMoveList);
+    connect(fmDownMoveListAC, &QAction::triggered, this, &YQCSongsMaintain::fmDownMoveList);
+    connect(fmUpMoveAC, &QAction::triggered, this, &YQCSongsMaintain::fmUpMoveMusic);
+    connect(fmDownMoveAC, &QAction::triggered, this, &YQCSongsMaintain::fmDownMoveMusic);
+
+    connect(this, &YQCSongsMaintain::upMoveMusic, this, &YQCSongsMaintain::fmUpMoveMusicSql);
+    connect(this, &YQCSongsMaintain::downMoveMusic, this, &YQCSongsMaintain::fmDownMoveMusicSql);
+}
+
+void YQCSongsMaintain::setFmTableWidetPro(QTableWidget *widget)
+{
+    QStringList headerList;
+    headerList << "序号" << "歌曲名称" << "歌星" << "歌曲语言" << "歌曲分类";
+    widget->setColumnCount(headerList.size());
+    widget->setHorizontalHeaderLabels(headerList);    
+}
+
+void YQCSongsMaintain::fmUppage()
+{
+    if (fmCurrentPage <= 0)
+        return;
+
+    fmCurrentPage--;
+    show_FM(fmCurrentPage);
+}
+
+void YQCSongsMaintain::fmNextPage()
+{
+    if (fmCurrentPage >= fmTotalPage - 1)
+        return;
+
+    fmCurrentPage++;
+    show_FM(fmCurrentPage);
+}
+
+void YQCSongsMaintain::show_FMList()
+{
+    if(!_sql->queryFMSongList(fmLidQuery)) return;
+    ui->label_fm_total->setText(QString("总%1个歌单").arg(fmLidQuery.size()));
+    fmTotalRows = fmLidQuery.size();
+    fmTotalPage =  fmTotalRows/DEFAULT_FMNUM + (bool)(fmTotalRows%DEFAULT_FMNUM);
+    show_FM(fmCurrentPage);
+}
+
+void YQCSongsMaintain::show_FM(int currentPage)
+{
+    ui->label_fm_showPage->setText(QString("%1/%2").arg(currentPage+1).arg(fmTotalPage));
+    fmLidQuery.seek(DEFAULT_FMNUM *(currentPage));
+    fmLidQuery.previous();
+
+    if(fmLidQuery.next()){
+        ui->label_fm_name_01->setText(fmLidQuery.value("_title").toString());
+
+        if(_sql->queryFMSongListDetail(fmLidQuery.value("_lid").toLongLong(), fmListQuery01)){
+            ui->widget_fm_list_01->setTotal_Rows_Pages(fmListQuery01.size());
+            ui->label_fm_total_01->setText(QString("(包含%1首歌曲)").arg(fmListQuery01.size()));
+            show_page_FM01(ui->widget_fm_list_01->current_page);
+        }
+
+        ui->widget_fm_list_01->setEnabled(true);
+        fmMenu01->setEnabled(true);
+    }else{
+        ui->widget_fm_list_01->tableWidget->clearContents();
+        ui->label_fm_name_01->setText("无");
+        ui->label_fm_total_01->setText("包含0首歌曲");
+        ui->label_fm_image_01->setText("无头像");
+
+        ui->widget_fm_list_01->setEnabled(false);
+        fmMenu01->setEnabled(false);
+    }
+    if(fmLidQuery.next()){
+        ui->label_fm_name_02->setText(fmLidQuery.value("_title").toString());
+
+        if(_sql->queryFMSongListDetail(fmLidQuery.value("_lid").toLongLong(), fmListQuery02)){
+            ui->widget_fm_list_02->setTotal_Rows_Pages(fmListQuery02.size());
+            ui->label_fm_total_02->setText(QString("(包含%1首歌曲)").arg(fmListQuery02.size()));
+            show_page_FM02(ui->widget_fm_list_02->current_page);
+        }
+
+        ui->widget_fm_list_02->setEnabled(true);
+        fmMenu02->setEnabled(true);
+    }else{
+        ui->widget_fm_list_02->tableWidget->clearContents();
+        ui->label_fm_name_02->setText("无");
+        ui->label_fm_total_02->setText("包含0首歌曲");
+        ui->label_fm_image_02->setText("无头像");
+
+        ui->widget_fm_list_02->setEnabled(false);
+        fmMenu02->setEnabled(false);
+    }
+
+    if(fmLidQuery.next()){
+        ui->label_fm_name_03->setText(fmLidQuery.value("_title").toString());
+        if(_sql->queryFMSongListDetail(fmLidQuery.value("_lid").toLongLong(), fmListQuery03)){
+            ui->widget_fm_list_03->setTotal_Rows_Pages(fmListQuery03.size());
+            ui->label_fm_total_03->setText(QString("(包含%1首歌曲)").arg(fmListQuery03.size()));
+            show_page_FM03(ui->widget_fm_list_03->current_page);
+        }
+
+        ui->widget_fm_list_03->setEnabled(true);
+        fmMenu03->setEnabled(true);
+    }else{
+        ui->widget_fm_list_03->tableWidget->clearContents();
+        ui->label_fm_name_03->setText("无");
+        ui->label_fm_total_03->setText("包含0首歌曲");
+        ui->label_fm_image_03->setText("无头像");
+
+        ui->widget_fm_list_03->setEnabled(false);
+        fmMenu03->setEnabled(false);
+    }    
+}
+
+void YQCSongsMaintain::show_page_FM01(int currentPage)
+{
+    ui->widget_fm_list_01->tableWidget->clearContents();
+    ui->widget_fm_list_01->tableWidget->setRowCount(ui->widget_fm_list_01->setValidRowsCount());
+    ui->widget_fm_list_01->label_showPage->setText(QString("%1页/共%2页").arg(currentPage+1).arg(ui->widget_fm_list_01->total_page));
+
+    int row = 0;
+    int indexNu = ui->widget_fm_list_01->row_page*(currentPage);  
+    fmListQuery01.seek(indexNu);
+    fmListQuery01.previous();
+
+    int offset = ui->widget_fm_list_01->current_page * ui->widget_fm_list_01->row_page;
+    while(fmListQuery01.next()){
+        ui->widget_fm_list_01->tableWidget->setItem(row, fmList_id, new QTableWidgetItem(QString::number(row + 1 + offset)));
+        ui->widget_fm_list_01->tableWidget->setItem(row, fmList_name, new QTableWidgetItem(fmListQuery01.value("_name").toString()));
+        ui->widget_fm_list_01->tableWidget->setItem(row, fmList_singer, new QTableWidgetItem(fmListQuery01.value("_singer").toString()));
+        ui->widget_fm_list_01->tableWidget->setItem(row, fmList_language, new QTableWidgetItem(fmListQuery01.value("_language").toString()));
+        ui->widget_fm_list_01->tableWidget->setItem(row, fmList_type, new QTableWidgetItem(fmListQuery01.value("_type").toString()));
+        ui->widget_fm_list_01->tableWidget->item(row, fmList_id)->setTextAlignment(Qt::AlignCenter);
+        row++;        
+        if (row == ui->widget_fm_list_01->row_page) break;
+    }
+}
+
+void YQCSongsMaintain::show_page_FM02(int currentPage)
+{
+    ui->widget_fm_list_02->tableWidget->clearContents();
+    ui->widget_fm_list_02->tableWidget->setRowCount(ui->widget_fm_list_02->setValidRowsCount());
+    ui->widget_fm_list_02->label_showPage->setText(QString("%1页/共%2页").arg(currentPage+1).arg(ui->widget_fm_list_02->total_page));
+
+    int indexNu = ui->widget_fm_list_02->row_page*(currentPage);
+    fmListQuery02.seek(indexNu);
+    fmListQuery02.previous();
+    int row = 0;
+
+    int offset = ui->widget_fm_list_02->current_page * ui->widget_fm_list_02->row_page;
+    while(fmListQuery02.next()){
+        ui->widget_fm_list_02->tableWidget->setItem(row, fmList_id, new QTableWidgetItem(QString::number(row + 1 + offset)));
+        ui->widget_fm_list_02->tableWidget->setItem(row, fmList_name, new QTableWidgetItem(fmListQuery02.value("_name").toString()));
+        ui->widget_fm_list_02->tableWidget->setItem(row, fmList_singer, new QTableWidgetItem(fmListQuery02.value("_singer").toString()));
+        ui->widget_fm_list_02->tableWidget->setItem(row, fmList_language, new QTableWidgetItem(fmListQuery02.value("_language").toString()));
+        ui->widget_fm_list_02->tableWidget->setItem(row, fmList_type, new QTableWidgetItem(fmListQuery02.value("_type").toString()));                
+        ui->widget_fm_list_02->tableWidget->item(row, fmList_id)->setTextAlignment(Qt::AlignCenter);
+        row++;
+
+        if (row == ui->widget_fm_list_02->row_page) return;
+    }
+}
+
+void YQCSongsMaintain::show_page_FM03(int currentPage)
+{
+    ui->widget_fm_list_03->tableWidget->clearContents();
+    ui->widget_fm_list_03->tableWidget->setRowCount(ui->widget_fm_list_03->setValidRowsCount());
+    ui->widget_fm_list_03->label_showPage->setText(QString("%1页/共%2页").arg(currentPage+1).arg(ui->widget_fm_list_03->total_page));
+
+    int indexNu = ui->widget_fm_list_03->row_page*(currentPage);
+    fmListQuery03.seek(indexNu);
+    fmListQuery03.previous();
+    int row = 0;
+
+
+    int offset = ui->widget_fm_list_03->current_page * ui->widget_fm_list_03->row_page;
+    while(fmListQuery03.next()){
+        ui->widget_fm_list_03->tableWidget->setItem(row, fmList_id, new QTableWidgetItem(QString::number(row + 1 + offset)));
+        ui->widget_fm_list_03->tableWidget->setItem(row, fmList_name, new QTableWidgetItem(fmListQuery03.value("_name").toString()));        
+        ui->widget_fm_list_03->tableWidget->setItem(row, fmList_singer, new QTableWidgetItem(fmListQuery03.value("_singer").toString()));
+        ui->widget_fm_list_03->tableWidget->setItem(row, fmList_language, new QTableWidgetItem(fmListQuery03.value("_language").toString()));
+        ui->widget_fm_list_03->tableWidget->setItem(row, fmList_type, new QTableWidgetItem(fmListQuery03.value("_type").toString()));        
+        ui->widget_fm_list_03->tableWidget->item(row, fmList_id)->setTextAlignment(Qt::AlignCenter);
+        row++;
+
+        if (row == ui->widget_fm_list_03->row_page) return;
+    }
+}
+
+int YQCSongsMaintain::getQueryIndex(const PagingTableWidget *widget)
+{
+    int rowCount = widget->tableWidget->currentRow();
+    int index = rowCount + widget->current_page * widget->row_page;
+    return index;
+}
+
+void YQCSongsMaintain::deleteMediaList(const qint64 &index)
+{
+    fmLidQuery.seek(index);
+    qint64 lid = fmLidQuery.value("_lid").toLongLong();
+
+    if(!_sql->deleteFmSonglist(lid))
+        QMessageBox::information(this, "删除错误提示", QString("FM歌单:%1删除失败").arg(fmLidQuery.value("_title").toString()));
+
+    show_FMList();
+}
+
+void YQCSongsMaintain::updateFmMedialist(const qint64 &index, QSqlQuery &query)
+{
+    fmLidQuery.seek(index);  // fmLidQuery index query
+
+    AddFmMediaList *mediaList = new AddFmMediaList(this);
+    mediaList->initUpdateFm(_sql, &fmLidQuery, &query);
+    mediaList->open();
+    connect(mediaList, &AddFmMediaList::updateView, this, &YQCSongsMaintain::show_FMList);
+}
+
+void YQCSongsMaintain::on_frame_fm_01_customContextMenuRequested(const QPoint &pos)
+{
+    fmListFlag = fmIndex_01;
+
+    fmMenu01->clear();
+    QRect rect = ui->horizontalSpacer_fm_01->geometry();
+    QRect rectUpdateLabel = ui->label_fm_update_01->geometry();
+    if(pos.x() > rect.x()
+        && pos.x() < rectUpdateLabel.x()-10
+        && pos.y() > rect.y() - 3
+        && pos.y() < rect.height() + 3){
+        if(fmCurrentPage != 0)
+            fmMenu01->addAction(fmUpMoveListAC);
+        if(ui->widget_fm_list_02->isEnabled() == true)
+            fmMenu01->addAction(fmDownMoveListAC);
+        fmMenu01->exec(QCursor::pos());
+    }   
+}
+
+void YQCSongsMaintain::on_frame_fm_02_customContextMenuRequested(const QPoint &pos)
+{
+    fmListFlag = fmIndex_02;
+
+    fmMenu02->clear();
+    QRect rect = ui->horizontalSpacer_fm_02->geometry();
+    QRect rectUpdateLabel = ui->label_fm_update_02->geometry();
+    if(pos.x() > rect.x()
+        && pos.x() < rectUpdateLabel.x()-10
+        && pos.y() > rect.y() - 3
+        && pos.y() < rect.height() + 3){
+        fmMenu02->addAction(fmUpMoveListAC);
+        if(ui->widget_fm_list_03->isEnabled() == true)
+            fmMenu02->addAction(fmDownMoveListAC);
+        fmMenu02->exec(QCursor::pos());
+    }   
+}
+
+void YQCSongsMaintain::on_frame_fm_03_customContextMenuRequested(const QPoint &pos)
+{
+    fmListFlag = fmIndex_03;
+
+    fmMenu03->clear();
+    QRect rect = ui->horizontalSpacer_fm_03->geometry();
+    QRect rectUpdateLabel = ui->label_fm_update_03->geometry();
+    if(pos.x() > rect.x()
+        && pos.x() < rectUpdateLabel.x()-10
+        && pos.y() > rect.y() - 3
+        && pos.y() < rect.height() + 3){
+        fmMenu03->addAction(fmUpMoveListAC);
+        if(fmCurrentPage != (fmTotalPage -1))
+            fmMenu03->addAction(fmDownMoveListAC);
+        fmMenu03->exec(QCursor::pos());
+    }
+}
+
+void YQCSongsMaintain::addFmRight01(const QPoint &pos)
+{
+    fmListFlag = fmIndex_01;
+
+    if(ui->widget_fm_list_01->tableWidget->rowAt(pos.y()) != -1){
+       if(!(ui->widget_fm_list_01->tableWidget->rowAt(pos.y()) == 0
+            && ui->widget_fm_list_01->current_page == 0))
+           ui->widget_fm_list_01->menuRight->addAction(fmUpMoveAC);
+
+       if(!(ui->widget_fm_list_01->tableWidget->rowAt(pos.y()) == ui->widget_fm_list_01->tableWidget->rowCount() - 1
+            && ui->widget_fm_list_01->current_page == ui->widget_fm_list_01->total_page-1))
+           ui->widget_fm_list_01->menuRight->addAction(fmDownMoveAC);
+       ui->widget_fm_list_01->menuRight->addSeparator();
+    }
+}
+
+void YQCSongsMaintain::addFmRight02(const QPoint &pos)
+{
+    fmListFlag = fmIndex_02;
+
+    if(ui->widget_fm_list_02->tableWidget->rowAt(pos.y()) != -1){
+        if(!(ui->widget_fm_list_02->tableWidget->rowAt(pos.y()) == 0
+             && ui->widget_fm_list_02->current_page == 0))
+            ui->widget_fm_list_02->menuRight->addAction(fmUpMoveAC);
+
+        if(!(ui->widget_fm_list_02->tableWidget->rowAt(pos.y()) == ui->widget_fm_list_02->tableWidget->rowCount() - 1
+             && ui->widget_fm_list_02->current_page == ui->widget_fm_list_02->total_page-1))
+            ui->widget_fm_list_02->menuRight->addAction(fmDownMoveAC);
+        ui->widget_fm_list_02->menuRight->addSeparator();
+    }
+}
+
+void YQCSongsMaintain::addFmRight03(const QPoint &pos)
+{
+    fmListFlag = fmIndex_03;
+
+    if(ui->widget_fm_list_02->tableWidget->rowAt(pos.y()) != -1){
+        if(!(ui->widget_fm_list_03->tableWidget->rowAt(pos.y()) == 0
+             && ui->widget_fm_list_03->current_page == 0))
+            ui->widget_fm_list_03->menuRight->addAction(fmUpMoveAC);
+
+        if(!(ui->widget_fm_list_03->tableWidget->rowAt(pos.y()) == ui->widget_fm_list_03->tableWidget->rowCount() - 1
+             && ui->widget_fm_list_03->current_page == ui->widget_fm_list_03->total_page-1))
+            ui->widget_fm_list_03->menuRight->addAction(fmDownMoveAC);
+        ui->widget_fm_list_03->menuRight->addSeparator();
+    }
+}
+
+void YQCSongsMaintain::fmUpMoveList()
+{
+    int index = 0;
+    if(fmListFlag == fmIndex_01){
+        index = fmCurrentPage * DEFAULT_FMNUM + 0;
+    }else if(fmListFlag == fmIndex_02){
+        index = fmCurrentPage * DEFAULT_FMNUM + 1;
+    }else if(fmListFlag == fmIndex_03){
+        index = fmCurrentPage * DEFAULT_FMNUM + 2;
+    }
+
+    fmLidQuery.seek(index);
+    qint64 lid = fmLidQuery.value("_lid").toLongLong();
+    qint64 serial_id = fmLidQuery.value("_serial_id").toLongLong();
+    QVector<QString> value;
+    value.clear();
+    value.append(fmLidQuery.value("_title").toString());
+    value.append(fmLidQuery.value("_image").toString());
+    value.append(fmLidQuery.value("_type").toString());
+    value.append(fmLidQuery.value("_count").toString());
+    value.append(fmLidQuery.value("_special").toString());
+
+    fmLidQuery.previous();
+    qint64 lidPre = fmLidQuery.value("_lid").toLongLong();
+    qint64 serial_idPre = fmLidQuery.value("_serial_id").toLongLong();
+    QVector<QString> valuePre;
+    valuePre.clear();
+    valuePre.append(fmLidQuery.value("_title").toString());
+    valuePre.append(fmLidQuery.value("_image").toString());
+    valuePre.append(fmLidQuery.value("_type").toString());
+    valuePre.append(fmLidQuery.value("_count").toString());
+    valuePre.append(fmLidQuery.value("_special").toString());
+
+    qint64 maxLid = -1;
+    _sql->getFmMaxLid(maxLid);
+    if(maxLid == -1) return;
+    if(!_sql->updateFmLid(lidPre, lid, maxLid)) return;
+
+    if(_sql->updateFmMediaUpDownMove(lidPre, serial_idPre, value)){
+       if(_sql->updateFmMediaUpDownMove(lid, serial_id, valuePre));
+       else
+           _sql->updateFmMediaUpDownMove(lidPre, serial_idPre, value);
+    }
+
+    show_FMList();
+}
+
+void YQCSongsMaintain::fmDownMoveList()
+{
+    int index = 0;
+    if(fmListFlag == fmIndex_01){
+        index = fmCurrentPage * DEFAULT_FMNUM + 0;
+    }else if(fmListFlag == fmIndex_02){
+        index = fmCurrentPage * DEFAULT_FMNUM + 1;
+    }else if(fmListFlag == fmIndex_03){
+        index = fmCurrentPage * DEFAULT_FMNUM + 2;
+    }
+
+    fmLidQuery.seek(index);
+    qint64 lid = fmLidQuery.value("_lid").toLongLong();
+    qint64 serial_id = fmLidQuery.value("_serial_id").toLongLong();
+    QVector<QString> value;
+    value.clear();
+    value.append(fmLidQuery.value("_title").toString());
+    value.append(fmLidQuery.value("_image").toString());
+    value.append(fmLidQuery.value("_type").toString());
+    value.append(fmLidQuery.value("_count").toString());
+    value.append(fmLidQuery.value("_special").toString());
+
+    fmLidQuery.next();
+    qint64 lidNext = fmLidQuery.value("_lid").toLongLong();
+    qint64 serial_idNext = fmLidQuery.value("_serial_id").toLongLong();
+    QVector<QString> valueNext;
+    valueNext.clear();
+    valueNext.append(fmLidQuery.value("_title").toString());
+    valueNext.append(fmLidQuery.value("_image").toString());
+    valueNext.append(fmLidQuery.value("_type").toString());
+    valueNext.append(fmLidQuery.value("_count").toString());
+    valueNext.append(fmLidQuery.value("_special").toString());
+
+    qint64 maxLid = -1;
+    _sql->getFmMaxLid(maxLid);
+    if(maxLid == -1) return;
+    if(!_sql->updateFmLid(lid, lidNext, maxLid)) return;
+
+
+    if(_sql->updateFmMediaUpDownMove(lid, serial_id, valueNext)){
+        if(_sql->updateFmMediaUpDownMove(lidNext, serial_idNext, value));
+        else
+            _sql->updateFmMediaUpDownMove(lid, serial_id, valueNext);
+    }
+
+    show_FMList();
+}
+
+void YQCSongsMaintain::fmUpMoveMusic()
+{
+    if (fmListFlag == fmIndex_01){
+        int index = getQueryIndex(ui->widget_fm_list_01);
+        fmListQuery01.seek(index);
+        emit upMoveMusic(fmListQuery01);
+    }
+    else if (fmListFlag == fmIndex_02){
+        int index = getQueryIndex(ui->widget_fm_list_02);
+        fmListQuery02.seek(index);
+        emit upMoveMusic(fmListQuery02);
+    }
+    else if (fmListFlag == fmIndex_03){
+        int index = getQueryIndex(ui->widget_fm_list_03);
+        fmListQuery03.seek(index);
+        emit upMoveMusic(fmListQuery03);
+    }
+}
+
+void YQCSongsMaintain::fmDownMoveMusic()
+{
+    if (fmListFlag == fmIndex_01){
+        int index = getQueryIndex(ui->widget_fm_list_01);
+        fmListQuery01.seek(index);
+        emit downMoveMusic(fmListQuery01);
+    }
+    else if (fmListFlag == fmIndex_02){
+        int index = getQueryIndex(ui->widget_fm_list_02);
+        fmListQuery02.seek(index);
+        emit downMoveMusic(fmListQuery02);
+    }
+    else if (fmListFlag == fmIndex_03){
+        int index = getQueryIndex(ui->widget_fm_list_03);
+        fmListQuery03.seek(index);
+        emit downMoveMusic(fmListQuery03);
+    }
+}
+
+void YQCSongsMaintain::fmUpMoveMusicSql(QSqlQuery &query)
+{
+    qint64 mid, lid, index;
+    mid = query.value("_mid").toLongLong();
+    lid = query.value("_lid").toLongLong();
+    index = query.value("_index").toLongLong();
+    query.previous();
+    qint64 midPre, lidPre, indexPre;
+    midPre = query.value("_mid").toLongLong();
+    lidPre = query.value("_lid").toLongLong();
+    indexPre = query.value("_index").toLongLong();
+
+    if(_sql->updateFmMediaListUpDownMove(lid, index, midPre)){
+       if(_sql->updateFmMediaListUpDownMove(lidPre, indexPre, mid));
+       else
+           _sql->updateFmMediaListUpDownMove(lid, index, mid);
+    }
+    show_FM(fmCurrentPage);
+}
+
+void YQCSongsMaintain::fmDownMoveMusicSql(QSqlQuery &query)
+{    
+    qint64 mid, lid, index;
+    mid = query.value("_mid").toLongLong();
+    lid = query.value("_lid").toLongLong();
+    index = query.value("_index").toLongLong();
+    query.next();
+    qint64 midNext, lidNext, indexNext;
+    midNext = query.value("_mid").toLongLong();
+    lidNext = query.value("_lid").toLongLong();
+    indexNext = query.value("_index").toLongLong();
+
+    if(_sql->updateFmMediaListUpDownMove(lid, index, midNext)){
+       if(_sql->updateFmMediaListUpDownMove(lidNext, indexNext, mid));
+       else
+           _sql->updateFmMediaListUpDownMove(lid, index, mid);
+    }
+
+    show_FM(fmCurrentPage);
+}
+
+void YQCSongsMaintain::deleteFmMediaList01()
+{
+    deleteMediaList(fmCurrentPage * DEFAULT_FMNUM + 0);
+}
+
+void YQCSongsMaintain::deleteFmMediaList02()
+{
+    deleteMediaList(fmCurrentPage * DEFAULT_FMNUM + 1);
+}
+
+void YQCSongsMaintain::deleteFmMediaList03()
+{
+    deleteMediaList(fmCurrentPage * DEFAULT_FMNUM + 2);
+}
+
+void YQCSongsMaintain::updateFmMedialist01()
+{
+    updateFmMedialist(fmCurrentPage * DEFAULT_FMNUM + 0, fmListQuery01);
+}
+
+void YQCSongsMaintain::updateFmMedialist02()
+{
+    updateFmMedialist(fmCurrentPage * DEFAULT_FMNUM + 1, fmListQuery02);
+}
+
+void YQCSongsMaintain::updateFmMedialist03()
+{
+    updateFmMedialist(fmCurrentPage * DEFAULT_FMNUM + 2, fmListQuery03);
+}
+
+void YQCSongsMaintain::on_pushButton_fm_create_clicked()
+{
+    AddFmMediaList *mediaList = new AddFmMediaList(this);
+    mediaList->setSqlPointer(_sql);
+    mediaList->open();
+}
+
+
+
+void YQCSongsMaintain::initblack()
+{   
+    ui->label_black_title->setText("黑名单管理");//"<u>取消黑名单</u>"
+    ui->label_black_total->clear();
+
+    connect(ui->widget_black, &PagingTableWidget::updateView, this, &YQCSongsMaintain::show_page_black);
+    connect(ui->widget_black, &PagingTableWidget::addMenu, this, &YQCSongsMaintain::addBlackRightMenu);
+
+    ui->widget_black->tableWidget->resizeRowsToContents();
+}
+
+void YQCSongsMaintain::initBlackACtionMenu()
+{
+    cancelBlack = new QAction("取消黑名单", ui->widget_black->tableWidget);       
+    connect(cancelBlack, &QAction::triggered, this, &YQCSongsMaintain::cancelBlack_MA);
+}
+
+void YQCSongsMaintain::initBlack_Media()
+{
+    QStringList headerList;
+    headerList << "序号" << "歌曲名称" << "歌星" << "歌曲语种" << "歌曲分类" << ""
+               <<"MID" << "SID1" << "SID2" << "PATH" << "COUNT";
+    ui->label_black_title->setText("黑名单管理-歌曲黑名单");
+    ui->widget_black->tableWidget->setColumnCount(headerList.size());
+    ui->widget_black->tableWidget->setHorizontalHeaderLabels(headerList);
+    ui->widget_black->tableWidget->setColumnHidden(medBlack_mid, true);
+    ui->widget_black->tableWidget->setColumnHidden(medBlack_sid1, true);
+    ui->widget_black->tableWidget->setColumnHidden(medBlack_sid2, true);
+    ui->widget_black->tableWidget->setColumnHidden(medBlack_path, true);
+    ui->widget_black->tableWidget->setColumnHidden(medBlack_count, true);
+    setBlackColumnWidth_Media(ui->widget_black->tableWidget);
+
+//    if(!_sql->queryMediaBlack(query)) return;
+    ui->label_black_total->setText(QString("(共有%1首歌曲)").arg(query.size()));
+    ui->widget_black->tableWidget->setRowCount(query.size());//需要手动指定行、列数
+
+    ui->widget_black->setTotal_Rows_Pages(query.size());
+    show_page_black(ui->widget_black->current_page);
+}
+
+void YQCSongsMaintain::initBlack_Actor()
+{
+    QStringList headerList;
+    headerList << "序号" << "歌星头像" << "歌星名字" << "性别" << "区域" << "" << "SID";
+    ui->widget_black->tableWidget->setColumnCount(headerList.size());
+    ui->widget_black->tableWidget->setHorizontalHeaderLabels(headerList);
+    ui->widget_black->tableWidget->setColumnHidden(actBlack_sid, true);
+    setBlackColumnWidth_Actor(ui->widget_black->tableWidget);
+
+//    if(!_sql->queryActorBlack(query)) return;
+    ui->widget_black->tableWidget->setRowCount(query.size());
+    ui->label_black_total->setText(QString("(共有%1首歌曲)").arg(query.size()));
+    ui->widget_black->setTotal_Rows_Pages(query.size());
+    show_page_black(ui->widget_black->current_page);
+}
+
+void YQCSongsMaintain::setBlackColumnWidth_Media(QTableWidget *widget)
+{
+    int width = widget->width();
+    int total = 14;
+    widget->setColumnWidth(medBlack_check, (width/total)*1);
+    widget->setColumnWidth(medBlack_name, (width/total)*5);
+    widget->setColumnWidth(medBlack_singer, (width/total)*2);
+    widget->setColumnWidth(medBlack_language, (width/total)*2);
+    widget->setColumnWidth(medBlack_type, (width/total)*2);
+    widget->setColumnWidth(medBlack_edit, (width/total)*2);
+}
+
+void YQCSongsMaintain::setBlackColumnWidth_Actor(QTableWidget *widget)
+{
+    int width = widget->width();
+    int total = 16;
+    widget->setColumnWidth(actBlack_check, (width/total)*1);
+    widget->setColumnWidth(actBlack_image, (width/total)*3);
+    widget->setColumnWidth(actBlack_name, (width/total)*3);
+    widget->setColumnWidth(actBlack_sex, (width/total)*3);
+    widget->setColumnWidth(actBlack_nation, (width/total)*3);
+    widget->setColumnWidth(actBlack_edit, (width/total)*3);
+}
+
+
+void YQCSongsMaintain::getCheckids(const QTableWidget *widget, QVector<qint64> &mids)
+{
+    for (int i=0; i<widget->rowCount(); i++){
+        if (widget->item(i,medBlack_check)->checkState() == Qt::Checked)
+            mids.append(widget->item(i, medBlack_mid)->text().toLongLong());
+    }
+}
+
+void YQCSongsMaintain::cancelBlack_MA()
+{
+    if (currentRow == widItem_blackMusic){
+        QVector<qint64> mids;
+        getCheckids(ui->widget_black->tableWidget, mids);
+        _sql->updateMediaBlackMush(mids, false);//取消黑名单
+
+//        if(!_sql->queryMediaBlack(query)) return;
+        ui->label_black_total->setText(QString("(共有%1首歌曲)").arg(query.size()));
+        ui->widget_black->setTotal_Rows_Pages(query.size());
+        show_page_black(ui->widget_black->current_page);
+    }
+    else if (currentRow == widItem_blackSinger){
+        QVector<qint64> sids;
+        QVector<qint64> mids;
+        getCheckids(ui->widget_black->tableWidget, sids);
+        if(sids.isEmpty())
+            return;
+        for(int i=0; i<sids.size(); i++){
+            mids.clear();
+            _sql->getMidsOfSid(sids.at(i), mids);
+            if (_sql->updateMediaBlackMush(mids, false))
+                _sql->updateActorBlack(sids.at(i), false);
+        }
+
+//        if(!_sql->queryActorBlack(query)) return;
+        ui->label_black_total->setText(QString("(共有%1位歌星)").arg(query.size()));
+        ui->widget_black->setTotal_Rows_Pages(query.size());
+        show_page_black(ui->widget_black->current_page);
+    }
+}
+
+void YQCSongsMaintain::addBlackRightMenu()
+{
+    ui->widget_black->menuRight->addAction(cancelBlack);
+    ui->widget_black->menuRight->addSeparator();
+    ui->widget_black->menuRight->addAction(ui->widget_black->select);
+    ui->widget_black->menuRight->addAction(ui->widget_black->allSelect);
+    ui->widget_black->menuRight->addSeparator();
+}
+
+void YQCSongsMaintain::show_page_black(int currentPage)
+{
+    ui->widget_black->tableWidget->clearContents();
+    ui->widget_black->tableWidget->setRowCount(ui->widget_black->setValidRowsCount());//需要手动指定行、列数
+    ui->widget_black->label_showPage->setText(QString("%1页/共%2页").arg(currentPage+1).arg(ui->widget_black->total_page));
+    query.seek(ui->widget_black->row_page*(currentPage));
+    query.previous();
+    int row = 0;
+
+    if (currentRow == widItem_blackMusic){
+        int offset = ui->widget_black->current_page * ui->widget_black->row_page;
+        while(query.next()){
+            QTableWidgetItem *check = new QTableWidgetItem();
+            check->setText(QString::number(row + 1 + offset));
+            check->setCheckState(Qt::Unchecked);
+            ui->widget_black->tableWidget->setItem(row, medBlack_check, check);
+            ui->widget_black->tableWidget->setItem(row, medBlack_name, new QTableWidgetItem(query.value("_name").toString()));
+            ui->widget_black->tableWidget->setItem(row, medBlack_singer, new QTableWidgetItem(query.value("_singer").toString()));
+            ui->widget_black->tableWidget->setItem(row, medBlack_language, new QTableWidgetItem(query.value("_language").toString()));
+            ui->widget_black->tableWidget->setItem(row, medBlack_type, new QTableWidgetItem(query.value("_type").toString()));
+            //        ui->tableWidget_black->setItem(row, medBlack_edit, new QTableWidgetItem(query.value("_original_track").toString()));
+            ui->widget_black->tableWidget->setItem(row, medBlack_mid, new QTableWidgetItem(query.value("_mid").toString()));
+            ui->widget_black->tableWidget->setItem(row, medBlack_sid1, new QTableWidgetItem(query.value("_artist_sid_1").toString()));
+            ui->widget_black->tableWidget->setItem(row, medBlack_sid2, new QTableWidgetItem(query.value("_artist_sid_2").toString()));
+            ui->widget_black->tableWidget->setItem(row, medBlack_path, new QTableWidgetItem(query.value("_path").toString()));
+            ui->widget_black->tableWidget->setItem(row, medBlack_count, new QTableWidgetItem(query.value("_count").toString()));
+            ui->widget_black->tableWidget->item(row, medBlack_check)->setTextAlignment(Qt::AlignCenter);
+            ui->widget_black->tableWidget->setRowHeight(row, DEFAULT_ROWHEIGHT);
+            row++;
+
+            if (row == ui->widget_black->row_page) return;
+        }
+    }
+    else if(currentRow == widItem_blackSinger){
+        int offset = ui->widget_black->current_page * ui->widget_black->row_page;
+        QString filePath;
+        CurlUpload *curlDownlaod = new CurlUpload();
+        QString runPath = QCoreApplication::applicationDirPath();
+        runPath.replace(runPath.size()-9, 9, "/image/" );
+
+//        IconDelegate iconDele;
+//        ui->tableWidget_black->setItemDelegateForColumn(actBlack_image, &iconDele);
+        while(query.next()){
+            QTableWidgetItem *check = new QTableWidgetItem();
+            check->setText(QString::number(row + 1 + offset));
+            check->setCheckState(Qt::Unchecked);
+
+            filePath = runPath + query.value("_name").toString();
+            filePath += ".jpg";
+            QFile file(filePath);
+            if (!file.exists()){
+//                curlDownlaod->downloadActorImage(query.value("_name").toString(), filePath);
+            }
+//            QIcon icon(filePath);  QIcon(filePath)
+            QPixmap pixmap = QPixmap(filePath).scaled(50, 50);
+            ui->widget_black->tableWidget->setItem(row, actBlack_check, check);
+            ui->widget_black->tableWidget->setItem(row, actBlack_image, new QTableWidgetItem(pixmap, NULL));
+            ui->widget_black->tableWidget->setItem(row, actBlack_name, new QTableWidgetItem(query.value("_name").toString()));
+            ui->widget_black->tableWidget->setItem(row, actBlack_sex, new QTableWidgetItem(query.value("_sex").toString()));
+            ui->widget_black->tableWidget->setItem(row, actBlack_nation, new QTableWidgetItem(query.value("_nation").toString()));
+            ui->widget_black->tableWidget->setItem(row, actBlack_sid, new QTableWidgetItem(query.value("_sid").toString()));
+            ui->widget_black->tableWidget->item(row, actBlack_check)->setTextAlignment(Qt::AlignCenter);
+            ui->widget_black->tableWidget->setRowHeight(row, DEFAULT_ROWHEIGHT);
+            row++;
+
+            if (row == ui->widget_black->row_page) return;
+        }
+    }
+}
+
+
+
+void YQCSongsMaintain::initSetInfoList()
+{
+    initTableWidget_setInfoList();
+
+    QString titleStr = NULL;
+    if (currentRow == widItem_listInfo){
+        titleStr = "资料设定-排行榜资料";
+        initSetInfoList_infoValue();
+    }else if (currentRow == widItem_singerInfo){
+        initSetInfoList_singerVlaue();
+        titleStr = "资料设定-歌星资料";
+    }else if (currentRow == widItem_songsInfo){
+        initSetInfoList_songsValue();
+        titleStr = "资料设定-歌曲资料";
+    }
+    ui->label_setInfoList_title->setText(titleStr);
+}
+
+void YQCSongsMaintain::initTableWidget_setInfoList()
+{
+    QStringList headerList;
+    headerList << "编号" << "名称" << "编辑";
+    ui->tableWidget_setInfo_listInfo->setColumnCount(headerList.size());
+    ui->tableWidget_setInfo_listInfo->setHorizontalHeaderLabels(headerList);
+    ui->tableWidget_setInfo_listInfo->setItemDelegate(new NoFocusDelegate());
+    ui->tableWidget_setInfo_listInfo->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->tableWidget_setInfo_listInfo->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->tableWidget_setInfo_listInfo->horizontalHeader()->setHighlightSections(false);
+    ui->tableWidget_setInfo_listInfo->verticalHeader()->setVisible(false);
+    ui->tableWidget_setInfo_listInfo->setShowGrid(false);
+    ui->tableWidget_setInfo_listInfo->setHorizontalScrollBarPolicy((Qt::ScrollBarAlwaysOff));
+    QHeaderView *headerWidget = ui->tableWidget_setInfo_listInfo->horizontalHeader();
+    headerWidget->setStretchLastSection(true);  ////最后一行适应空余部分
+    headerWidget->setSectionResizeMode(QHeaderView::Stretch); //ResizeToContents
+    ui->tableWidget_setInfo_listInfo->show();
+
+//    ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    //    ui->tableWidget->resizeRowsToContents();
+}
+
+void YQCSongsMaintain::initSetInfoList_infoValue()
+{
+//    QStringList typeList,
+//    if (!_sql->getMediaListType(typeList)) return;
+
+    ui->widget_setInfoList_select->setHidden(false);
+
+    QStringList comboboxList;
+    comboboxList << "选秀热歌榜" << "网络排行榜";
+    ui->comboBox_setInfoList_select->clear();
+    ui->comboBox_setInfoList_select->addItems(comboboxList);
+}
+
+void YQCSongsMaintain::initSetInfoList_songsValue()
+{
+    ui->widget_setInfoList_select->setHidden(false);
+
+
+    QStringList combobox_valueList, keyList;
+    readConfig->beginGroup("SONGSLIST");
+    keyList = readConfig->childKeys();
+    for (int i=0; i<keyList.size(); i++){
+       combobox_valueList.append(readConfig->value(keyList.at(i), "").toString());
+    }
+    readConfig->endGroup();
+
+    ui->comboBox_setInfoList_select->clear();
+    ui->comboBox_setInfoList_select->addItems(combobox_valueList);
+
+    QStringList valueList;
+    if(!_sql->getMediaLanguage(valueList)) return;
+    setSetInfoList_tableValue(valueList);
+}
+
+void YQCSongsMaintain::initSetInfoList_singerVlaue()
+{
+    ui->widget_setInfoList_select->setHidden(true);
+
+    QStringList nationList;
+    if(!_sql->getNation(nationList)) return;
+    setSetInfoList_tableValue(nationList);
+}
+
+void YQCSongsMaintain::setSetInfoList_tableValue(const QStringList &list)
+{
+    ui->tableWidget_setInfo_listInfo->clearContents();
+    ui->tableWidget_setInfo_listInfo->setRowCount(list.size());
+    for(int row=0; row<list.size(); row++){
+        ui->tableWidget_setInfo_listInfo->setRowHeight(row, DEFAULT_ROWHEIGHT);
+        ui->tableWidget_setInfo_listInfo->setItem(row, infoList_no, new QTableWidgetItem(QString::number(row+1)));
+        ui->tableWidget_setInfo_listInfo->setItem(row, infoList_type, new QTableWidgetItem(list.at(row)));
+        ui->tableWidget_setInfo_listInfo->setItem(row, infoList_edit, new QTableWidgetItem(""));
+        ui->tableWidget_setInfo_listInfo->item(row, infoList_no)->setTextAlignment(Qt::AlignCenter);
+        ui->tableWidget_setInfo_listInfo->item(row, infoList_type)->setTextAlignment(Qt::AlignCenter);
+    }
+}
+
+void YQCSongsMaintain::getsetInfoList_value(QStringList &list)
+{
+    QStringList valueList, keyList;
+    int index = ui->comboBox_setInfoList_select->currentIndex();
+    if(index == 0)
+        readConfig->beginGroup("HOTLIST");
+    else if (index == 1)
+        readConfig->beginGroup("NETWORKLIST");
+
+    keyList = readConfig->childKeys();
+    for (int i=0; i<keyList.size(); i++){
+       list.append(readConfig->value(keyList.at(i), "").toString());
+    }
+    readConfig->endGroup();
+}
+
+void YQCSongsMaintain::on_comboBox_setInfoList_select_currentIndexChanged(const QString &argu)
+{
+    if(argu.isEmpty())
+        return;
+    QString str = argu;
+    qDebug() << "str : " << str;
+    QStringList valueList;
+    if(currentRow == widItem_listInfo){
+
+        getsetInfoList_value(valueList);
+        setSetInfoList_tableValue(valueList);
+    }
+    else if(currentRow == widItem_songsInfo){
+        if(str.compare("歌曲语种") == 0)
+            _sql->getMediaLanguage(valueList);
+        else if(str.compare("歌曲分类") == 0)
+            _sql->getMediaType(valueList);
+        else if(str.compare("歌曲分辨率") == 0)
+            _sql->getMediaResolution(valueList);
+        else if(str.compare("歌曲音质") == 0)
+            _sql->getMediaQuality(valueList);
+        else if(str.compare("歌曲音效") == 0)
+            _sql->getMediaEffect(valueList);
+        else if(str.compare("歌曲来源") == 0)
+            _sql->getMediaSource(valueList);
+        else if(str.compare("版本类型") == 0)
+            _sql->getMediaVersion(valueList);
+        else if(str.compare("歌曲标签属性") == 0){
+
+        }
+        setSetInfoList_tableValue(valueList);
+    }
+}
+
+
+
+
+void YQCSongsMaintain::on_pushButton_2_clicked()
+{
+    LibListView *view = new LibListView(this);
+
+    view->show();
+}

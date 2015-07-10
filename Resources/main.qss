@@ -1,0 +1,295 @@
+QWidget#MainWidget{
+    background-color: rgb(235, 235, 235);
+}
+
+QListView#ListView{
+        font-size:14px;
+        color:rgb(58, 58, 58);
+        border: 1px solid rgb(201, 201, 201);
+        background: rgb(248, 248, 248);
+}
+
+QStackedWidget#StackedWidget{
+    font-size:14px;
+    color:rgb(58, 58, 58);
+    border: 1px solid rgb(201, 201, 201);
+    background: rgb(248, 248, 248);
+    border-radius:5px;
+}
+
+
+QPushButton#Button{
+    background-color: rgb(255, 255, 255);
+    border: 1px solid rgb(170, 170, 170);
+    color:rgb(88, 88, 88);
+    font-size:14px;
+    border-radius:5px;    
+}
+QPushButton#Button:hover{
+    background-color:rgb(255, 255, 255);
+    border: 1px solid rgb(42, 42, 42);
+    color:rgb(42, 42, 42);
+}
+
+QPushButton#Button:pressed{
+    background-color: rgb(255, 146, 62);
+    border: 1px solid rgb(255, 146, 62);
+    color:rgb(255, 255, 255);
+}
+
+
+QPushButton#DeleteTextButton{
+    background:transparent;
+    color :rgb(254, 107, 107);
+    font-size:14px;
+}
+
+QPushButton#DeleteTextButton:hover{
+    color :rgb(77, 77, 77);
+}
+
+QPushButton#DeleteTextButton:pressed{
+    color :rgb(255, 146, 62);
+}
+
+QPushButton#DeleteTextButton:disabled{
+    color :rgb(225, 225, 225);
+}
+
+QPushButton#TextButton{
+    background:transparent;
+    color :rgb(108, 162, 234);
+    font-size:14px;
+}
+
+QPushButton#TextButton:hover{
+    color :rgb(77, 77, 77);
+}
+
+QPushButton#TextButton:pressed{
+    color :rgb(255, 146, 62);
+}
+
+QPushButton#TextButton:disabled{
+    color :rgb(225, 225, 225);
+}
+
+
+QPushButton#SerachButton{
+    border-image:url(:/other/images/serach_normal.png);
+}
+
+QPushButton#SerachButton:hover{
+    border-image:url(:/other/images/serach_hover.png);
+}
+
+QPushButton#SerachButton:pressed{
+    border-image:url(:/other/images/serach_pressed.png);
+}
+
+QPushButton#SerachButton:disabled{
+    border-image:url(:/other/images/serach_disable.png);
+}
+
+
+QPushButton#CalendarButton{
+    border-image:url(:/other/images/calendar_normal.png);
+}
+
+QPushButton#CalendarButton:hover{
+    border-image:url(:/other/images/calendar_hovering.png);
+}
+
+QPushButton#CalendarButton:pressed{
+    border-image:url(":/other/images/calendar_pressed.png");
+}
+
+QPushButton#AnnotationButton{
+    border-image:url(:/other/images/annotation_normal.png);
+}
+QPushButton#AnnotationButton:pressed{
+    border-image:url(:/other/images/annotation_pressed.png);
+}
+
+QPushButton#PlusButton{
+    border-image:url(":/other/images/plus_normal.png");
+}
+
+QPushButton#PlusButton:hover{
+    border-image:url(:/other/images/plus_on.png);
+}
+
+QPushButton#PlusButton:pressed{
+    border-image:url(:/other/images/plus_pressed.png);
+}
+
+QPushButton#PlusButton:disabled{
+    border-image:url(:/other/images/plus_gray.png);
+}
+
+
+QPushButton#CheckBoxButton{
+    border-image:url(:/other/images/checkbox_normal.png);
+}
+QPushButton#CheckBoxButton:checked{
+    border-image:url(:/other/images/checkbox_selected.png);
+}
+QPushButton#CheckBoxButton:unchecked{
+    border-image:url(:/other/images/checkbox_normal.png);
+}
+
+QPushButton#CheckBoxButton:disabled{
+    border-image:url(:/other/images/checkbox_disable.png);
+}
+
+
+QLineEdit#LineEdit{
+    border: 1px solid rgb(170, 170, 170);
+    color:rgb(202, 202, 202);
+    border-radius:5px;
+}
+QLineEdit#LineEdit:hover{
+    border: 1px solid rgb(42, 42, 42);
+    color:rgb(202, 202, 202);
+}
+QLineEdit#LineEdit:pressed{
+    border: 1px solid rgb(255, 146, 62);
+    color:rgb(88, 88, 88);
+}
+QLineEdit#LineEdit:disabled{
+    color:rgb(202, 202, 202);
+    border: 1px solid rgb(170, 170, 170);
+}
+
+
+
+QLineEdit#SerachEdit{
+    border: 1px solid rgb(170, 170, 170);
+    color:rgb(202, 202, 202);
+    border-radius:5px;    
+}
+QLineEdit#SerachEdit:hover{
+    border: 1px solid rgb(42, 42, 42);
+    color:rgb(202, 202, 202);
+}
+QLineEdit#SerachEdit:pressed{
+    border: 1px solid rgb(255, 146, 62);
+    color:rgb(88, 88, 88);
+}
+QLineEdit#SerachEdit:disabled{
+    color:rgb(202, 202, 202);
+    border: 1px solid rgb(170, 170, 170);
+}
+
+QLineEdit#TimeEdit{
+    border: 1px solid rgb(170, 170, 170);
+    color:rgb(202, 202, 202);
+    border-radius:5px;    
+}
+QLineEdit#TimeEdit:hover{
+    border: 1px solid rgb(42, 42, 42);
+    color:rgb(202, 202, 202);
+}
+QLineEdit#TimeEdit:pressed{
+    border: 1px solid rgb(255, 146, 62);
+    color:rgb(88, 88, 88);
+}
+QLineEdit#TimeEdit:disabled{
+    color:rgb(202, 202, 202);
+    border: 1px solid rgb(170, 170, 170);
+}
+
+
+QComboBox#Combobox{
+    border:1px solid rgb(170, 170, 170);
+    border-radius:5px;
+    font-size:14px;
+    color:rgb(88, 88, 88);    
+}
+QComboBox#Combobox::down-arrow{
+    image:url(:/arrow/images/combobox_down.png);
+}
+QComboBox#Combobox::down-arrow:on{
+    image:url(:/arrow/images/combobox_up.png);
+}
+QComboBox#Combobox QAbstractItemView{
+     border:1px solid rgb(255, 146, 62);
+     selection-color:rgb(255, 255, 255);
+     selection-background-color:rgb(255, 146, 62);
+     color:rgb(00, 00, 00);
+}
+
+QComboBox#Combobox QAbstractItemView::item{
+        height:30px;
+}
+
+QComboBox#Combobox::drop-down{
+    width:20px;
+    border:none;
+}
+QComboBox#Combobox:on{
+    border:1px solid rgb(255, 146, 62);
+    border-top-left-radius:5px;
+    border-top-right-radius:5px;
+    border-bottom-left-radius:0px;
+    border-bottom-right-radius:0px;
+}
+
+QComboBox#Combobox:hover{
+    border:1px solid rgb(42, 42, 42);
+    color:rgb(42, 42, 42);
+}
+QComboBox#Combobox:disabled{
+    border:1px solid rgb(201, 201, 201);
+    color:rgb(225, 225, 225);
+}
+
+QLabel#TooptipLabel{
+    background: transparent;
+}
+
+QLabel#CenterLabel{
+    background-color:rgb(248, 248, 248);
+    border-top: 1px solid rgb(201, 201, 201);
+    border-bottom: 1px solid rgb(201, 201, 201);
+}
+
+QLabel#Label{
+    background: transparent;
+    font-size: 14px;
+}
+
+QTableView#TableView{
+        background: transparent;
+        border:0px;
+}
+
+TableView#PagingTable{
+    background-color:rgb(247, 246, 246);
+    alternate-background-color:rgb(234, 234, 234);
+    font-size:14px;
+}
+
+TableView#PagingTable QHeaderView::section{
+    background-color:rgb(234, 234, 234);
+    border:0px;
+    height:42px;
+    font-size:14px;
+}
+
+
+TableView#LibPagingTable{
+    background-color:rgb(247, 246, 246);
+    border: 1px solid rgb(110, 161, 240);
+    font-size:26px;
+}
+
+TableView#LibPagingTable::item{
+    spacing:10px;
+    border: 1px solid rgb(110, 161, 240);
+}
+TableView#LibPagingTable::item:selected
+{
+        color: #ffffff;
+        background-color: #122A3A;
+}

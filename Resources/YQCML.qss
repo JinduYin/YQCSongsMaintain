@@ -1,0 +1,312 @@
+
+QPushButton#transparentButton{
+        background:transparent;
+}
+
+QPushButton#menuButton{
+        background:transparent;
+}
+
+
+
+QPushButton#Button{
+    background-color: rgb(255, 255, 255);
+    border: 1px solid rgb(170, 170, 170);
+    color:rgb(88, 88, 88);
+    font-size:14px;
+    border-radius:5px;
+}
+QPushButton#Button:hover{
+    background-color:rgb(255, 255, 255);
+    border: 1px solid rgb(42, 42, 42);
+    color:rgb(42, 42, 42);
+}
+
+QPushButton#Button:pressed{
+    background-color: rgb(255, 146, 62);
+    border: 1px solid rgb(255, 146, 62);
+    color:rgb(255, 255, 255);
+}
+
+QPushButton#TextButton{
+    background:transparent;
+    color :rgb(108, 162, 234);
+    font-size:14px;
+}
+
+QPushButton#TextButton:hover{
+    color :rgb(77, 77, 77);
+}
+
+QPushButton#TextButton:pressed{
+    color :rgb(255, 146, 62);
+}
+
+QPushButton#TextButton:disabled{
+    color :rgb(225, 225, 225);
+}
+
+QPushButton#DeleteTextButton{
+    background:transparent;
+    color :rgb(254, 107, 107);
+    font-size:14px;
+}
+
+QPushButton#DeleteTextButton:hover{
+    color :rgb(77, 77, 77);
+}
+
+QPushButton#DeleteTextButton:pressed{
+    color :rgb(255, 146, 62);
+}
+
+QPushButton#DeleteTextButton:disabled{
+    color :rgb(225, 225, 225);
+}
+
+QPushButton#PreviewButton{
+    background:transparent;
+    border-image:url(:/video/images/preview_normal.png);
+}
+
+QPushButton#PreviewButton:hover{
+    border-image:url(:/video/images/preview_hovering.png);
+}
+
+QPushButton#PreviewButton:pressed{
+    border-image:url(:/video/images/preview_pressed.png);
+}
+
+QPushButton#PreviewButton:disabled{
+    border-image: url(:/video/images/preview_disable.png);
+}
+
+
+
+QPushButton#PlayButton{
+    border-image:url(":/video/images/play_normal.png");
+}
+
+QPushButton#PlayButton:disabled{
+    border-image:url(":/video/images/play_disable.png");
+}
+
+QPushButton#PlayButton:pressed{
+    border-image:url(":/video/images/play_pressed.png");
+}
+
+
+QPushButton#SerachButton{
+    border-image:url(":/other/images/serach_normal.png");
+}
+
+QPushButton#SerachButton:hover{
+    border-image:url(":/other/images/serach_hover.png");
+}
+
+QPushButton#SerachButton:pressed{
+    border-image:url(":/other/images/serach_pressed.png");
+}
+
+QPushButton#SerachButton:disabled{
+    border-image:url(":/other/images/serach_disable.png");
+}
+
+
+QPushButton#SwitchButton:checked{
+    border-image:url(":/switch/images/switch_on.png");
+}
+QPushButton#SwitchButton:!checked{
+    border-image:url(":/switch/images/switch_off.png");
+}
+QPushButton#SwitchButton:disabled{
+    border-image:url(":/switch/images/switch_disable.png");
+}
+
+QLineEdit#SerachEdit{
+    border: 1px solid rgb(170, 170, 170);
+    color:rgb(202, 202, 202);
+}
+QLineEdit#SerachEdit:hover{
+    border: 1px solid rgb(42, 42, 42);
+    color:rgb(202, 202, 202);
+}
+QLineEdit#SerachEdit:pressed{
+    border: 1px solid rgb(255, 146, 62);
+    color:rgb(88, 88, 88);
+}
+QLineEdit#SerachEdit:disabled{
+    color:rgb(202, 202, 202);
+    border: 1px solid rgb(170, 170, 170);
+
+}
+
+QFrame#SerachFrame{
+    background:transparent;
+    border-image:url(":/arrow/images/back_normal.png");
+}
+QFrame#SerachFrame:hover{
+    border-image:url(":/arrow/images/back_disable.png");
+}
+QFrame#SerachFrame:pressed{
+
+    border-image:url(":/arrow/images/back_pressed.png");
+}
+
+
+QComboBox{    
+    border:1px solid rgb(170, 170, 170);
+    border-radius:5px;
+    font-size:14px;
+    color:rgb(88, 88, 88);
+}
+QComboBox::down-arrow{
+    image:url(:/arrow/images/expansion.png);
+}
+QComboBox::down-arrow:on{
+    image:url(:/arrow/images/arrow.png);    
+}
+QComboBox QAbstractItemView{
+     border:1px solid rgb(255, 146, 62);
+     selection-color:rgb(255, 255, 255);
+     selection-background-color:rgb(255, 146, 62);     
+     color:rgb(00, 00, 00);
+}
+
+QComboBox QAbstractItemView::item{
+        height:30px;
+}
+
+QComboBox::drop-down{
+    width:20px;
+    border:none;
+}
+QComboBox:on{
+    border:1px solid rgb(255, 146, 62);
+    border-top-left-radius:5px;
+    border-top-right-radius:5px;
+    border-bottom-left-radius:0px;
+    border-bottom-right-radius:0px;
+}
+
+
+QComboBox:hover{
+    border:1px solid rgb(42, 42, 42);
+    color:rgb(42, 42, 42);
+}
+QComboBox:disabled{
+    border:1px solid rgb(201, 201, 201);
+    color:rgb(225, 225, 225);
+}
+
+
+QLabel#logoLabel{
+    background:transparent;
+    border-image:url(":/other/images/img/logo1.png");
+
+}
+
+QWidget#mainWidget{
+    background:rgb(00, 00, 00);
+}
+
+QWidget#topWidget{
+    background:rgb(00, 00, 00);
+}
+
+QMainWindow#MainWindow{
+    background:rgb(235, 235, 235);
+}
+
+
+
+QSplitter::handle{
+        background:lightgray;
+}
+
+QMenu{
+    background:white;
+        border:1px solid lightgray;
+}
+QMenu::item{
+        padding:0px 100px 0px 20px;
+        height:25px;
+}
+QMenu::item:selected:enabled{
+    background:lightgray;
+        color:white;
+}
+QMenu::item:selected:!enabled{
+    background:transparent;
+}
+QMenu::separator{
+    height:1px;
+    background:lightgray;
+        margin:2px 0px 2px 0px;
+}
+
+QMenu#menu{
+    background:white;
+        border:1px solid lightgray;
+}
+QMenu#menu::item{
+        padding:0px 40px 0px 30px;
+        height:25px;
+}
+QMenu#menu::item:selected:enabled{
+    background:lightgray;
+        color:white;
+}
+QMenu#menu::item:selected:!enabled{
+    background:transparent;
+}
+QMenu#menu::separator{
+    height:1px;
+    background:lightgray;
+        margin:2px 0px 2px 0px;
+}
+QMenu#menu::indicator {
+    padding:10px;
+}
+
+QToolTip{
+        border:1px solid gray;
+        background:white;
+        color:black;
+}
+
+
+
+QListView::item{
+        background:transparent;
+}
+QListView::item:hover{
+        background:rgb(60, 140, 210);
+}
+
+
+
+QGroupBox::title{
+        color:green;
+}
+
+QTabWidget::pane{
+        border:none;
+}
+QTabWidget::tab-bar{
+        alignment:center;
+}
+QTabBar::tab{
+        background:transparent;
+        color:white;
+        min-width:30ex;
+        min-height:10ex;
+}
+QTabBar::tab:hover{
+        background:rgb(255, 255, 255, 100);
+}
+QTabBar::tab:selected{
+        border-color: white;
+        background:white;
+        color:green;
+}

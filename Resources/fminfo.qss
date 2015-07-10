@@ -1,0 +1,11 @@
+QLabel#HeaderLabel{
+    background-color:rgb(234, 234, 234);
+    font-size: 14px;
+}
+
+QLabel{
+    background: transparent;
+    font-size: 14px;
+}
+
+

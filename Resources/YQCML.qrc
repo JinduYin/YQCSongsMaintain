@@ -1,0 +1,103 @@
+<RCC>
+    <qresource prefix="/arrow">
+        <file>images/arrow.png</file>
+        <file>images/back_disable.png</file>
+        <file>images/back_normal.png</file>
+        <file>images/back_pressed.png</file>
+        <file>images/down.png</file>
+        <file>images/entering_disable.png</file>
+        <file>images/entering_normal.png</file>
+        <file>images/entering_pressed.png</file>
+        <file>images/expansion.png</file>
+        <file>images/receives.png</file>
+        <file>images/receives01.png</file>
+        <file>images/combobox_down.png</file>
+        <file>images/combobox_up.png</file>
+    </qresource>
+    <qresource prefix="/video">
+        <file>images/pause.png</file>
+        <file>images/play_disable.png</file>
+        <file>images/play_normal.png</file>
+        <file>images/play_pressed.png</file>
+        <file>images/preview_disable.png</file>
+        <file>images/preview_hovering.png</file>
+        <file>images/preview_normal.png</file>
+        <file>images/preview_pressed.png</file>
+        <file>images/video_progress.png</file>
+        <file>images/video_progress_on.png</file>
+        <file>images/video_progress_point.png</file>
+    </qresource>
+    <qresource prefix="/switch">
+        <file>images/switch_disable.png</file>
+        <file>images/switch_off.png</file>
+        <file>images/switch_on.png</file>
+    </qresource>
+    <qresource prefix="/close_max_min">
+        <file>images/minimum_disable.png</file>
+        <file>images/minimum_hovering.png</file>
+        <file>images/minimum_normal.png</file>
+        <file>images/minimum_pressed.png</file>
+        <file>images/quit_disable.png</file>
+        <file>images/quit_hovering.png</file>
+        <file>images/quit_normal.png</file>
+        <file>images/quit_pressed.png</file>
+    </qresource>
+    <qresource prefix="/login">
+        <file>images/login_bg.png</file>
+        <file>images/password_disable.png</file>
+        <file>images/password_hovering.png</file>
+        <file>images/password_normal.png</file>
+        <file>images/password_pressed.png</file>
+        <file>images/user_disable.png</file>
+        <file>images/user_hovering.png</file>
+        <file>images/user_normal.png</file>
+        <file>images/user_pressed.png</file>
+    </qresource>
+    <qresource prefix="/other">
+        <file>img/login.png</file>
+        <file>img/logo.ico</file>
+        <file>img/logo1.png</file>
+        <file>img/logobmp.bmp</file>
+        <file>images/annotation_normal.png</file>
+        <file>images/annotation_pressed.png</file>
+        <file>images/checkbox_disable.png</file>
+        <file>images/checkbox_normal.png</file>
+        <file>images/checkbox_selected.png</file>
+        <file>images/checkbox_selected_disable.png</file>
+        <file>images/progress.png</file>
+        <file>images/progress_on.png</file>
+        <file>images/serach_disable.png</file>
+        <file>images/serach_hover.png</file>
+        <file>images/serach_normal.png</file>
+        <file>images/serach_pressed.png</file>
+        <file>images/serach_result.png</file>
+        <file>images/calendar.png</file>
+        <file>images/required.png</file>
+        <file>images/plus_gray.png</file>
+        <file>images/plus_normal.png</file>
+        <file>images/plus_on.png</file>
+        <file>images/plus_pressed.png</file>
+        <file>images/calendar_hovering.png</file>
+        <file>images/calendar_normal.png</file>
+        <file>images/calendar_pressed.png</file>
+    </qresource>
+    <qresource prefix="/qm">
+        <file>qt_zh_CN.qm</file>
+    </qresource>
+    <qresource prefix="/qss">
+        <file>YQCML.qss</file>
+        <file>libitem.qss</file>
+        <file>title.qss</file>
+        <file>main.qss</file>
+        <file>libinfo.qss</file>
+        <file>songquery.qss</file>
+        <file>singerquery.qss</file>
+        <file>songinfo.qss</file>
+        <file>songonline.qss</file>
+        <file>singerinfo.qss</file>
+        <file>fminfo.qss</file>
+    </qresource>
+    <qresource prefix="/xml">
+        <file>Config.xml</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,8 @@
+QWidget#Widget{
+    background:transparent;    
+}
+
+QLabel{
+    background: transparent;
+    font-size: 14px;
+}

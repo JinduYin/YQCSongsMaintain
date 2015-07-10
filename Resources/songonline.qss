@@ -1,0 +1,46 @@
+QWidget#Widget{
+    background:transparent;
+    border-radius:5px;
+}
+
+QWidget#TopWidget{
+    background:transparent;
+    border-top-left-radius:5px;
+    border-top-right-radius:5px;
+    border: 0px;
+}
+
+QWidget#CenterWidget{
+    background:rgb(255, 255, 255);
+    border-top: 1px solid rgb(201, 201, 201);
+    border-bottom: 1px solid rgb(201, 201, 201);
+}
+
+
+QLabel#TitleLabel{
+    background: transparent;
+    font-size:24px;
+    color:rgb(168, 168, 168);    
+}
+
+QLabel#SelectLabel{
+	background: transparent;
+	font-size: 14px;
+	color: rgb(88, 88, 88);
+}
+
+QLabel#ResultLabel{
+	background: transparent;
+	font-size: 14px;
+	color: rgb(88, 88, 88);
+}
+
+QLabel#Label{
+	background: transparent;
+	font-size: 14px;	
+}
+
+QTableView#ResultTableView{
+        background: transparent;
+        border:0px;
+}

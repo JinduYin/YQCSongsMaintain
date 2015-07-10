@@ -1,0 +1,210 @@
+QWidget#Widget{
+    background:transparent;    
+}
+
+QLabel{
+    background: transparent;
+    font-size: 14px;
+}
+
+QLabel#SingerInfoLabel{
+    background: transparent;
+    color:rgb(183, 183, 183);
+    font-size: 14px;
+}
+
+QLineEdit#SingerInfoLineEdit{
+    border: 1px solid rgb(170, 170, 170);
+    color:rgb(202, 202, 202);
+    border-radius:5px;
+}
+QLineEdit#SingerInfoLineEdit:hover{
+    border: 1px solid rgb(42, 42, 42);
+    color:rgb(202, 202, 202);
+}
+QLineEdit#SingerInfoLineEdit:pressed{
+    border: 1px solid rgb(255, 146, 62);
+    color:rgb(88, 88, 88);
+}
+QLineEdit#SingerInfoLineEdit:disabled{
+    color:rgb(202, 202, 202);
+    border: 1px solid rgb(170, 170, 170);
+}
+
+
+QLabel#HelpLabel{
+    background-color:rgb(255, 146, 62);
+    border-radius:5px;
+    font-size: 14px;
+}
+
+
+QPushButton#Button{
+    background-color: rgb(255, 255, 255);
+    border: 1px solid rgb(170, 170, 170);
+    color:rgb(88, 88, 88);
+    font-size:14px;
+    border-radius:5px;
+}
+QPushButton#Button:hover{
+    background-color:rgb(255, 255, 255);
+    border: 1px solid rgb(42, 42, 42);
+    color:rgb(42, 42, 42);
+}
+
+QPushButton#Button:pressed{
+    background-color: rgb(255, 146, 62);
+    border: 1px solid rgb(255, 146, 62);
+    color:rgb(255, 255, 255);
+}
+
+QPushButton#CalendarButton{
+    border-image:url(:/other/images/calendar_normal.png);
+}
+
+QPushButton#CalendarButton:hover{
+    border-image:url(:/other/images/calendar_hovering.png);
+}
+
+QPushButton#CalendarButton:pressed{
+    border-image:url(:/other/images/calendar_pressed.png);
+}
+
+QPushButton#AnnotationButton{
+    border-image:url(:/other/images/annotation_normal.png);
+}
+QPushButton#AnnotationButton:pressed{
+    border-image:url(:/other/images/annotation_pressed.png);
+}
+
+QPushButton#PlusButton{
+    border-image:url(:/other/images/plus_normal.png);
+}
+
+QPushButton#PlusButton:hover{
+    border-image:url(:/other/images/plus_on.png);
+}
+
+QPushButton#PlusButton:pressed{
+    border-image:url(:/other/images/plus_pressed.png);
+}
+
+QPushButton#PlusButton:disabled{
+    border-image:url(:/other/images/plus_gray.png);
+}
+
+QLineEdit#LineEdit{
+    border: 1px solid rgb(170, 170, 170);
+    color:rgb(202, 202, 202);
+    border-radius:5px;
+}
+QLineEdit#LineEdit:hover{
+    border: 1px solid rgb(42, 42, 42);
+    color:rgb(202, 202, 202);
+}
+QLineEdit#LineEdit:pressed{
+    border: 1px solid rgb(255, 146, 62);
+    color:rgb(88, 88, 88);
+}
+QLineEdit#LineEdit:disabled{
+    color:rgb(202, 202, 202);
+    border: 1px solid rgb(170, 170, 170);
+}
+
+
+QComboBox#Combobox{
+    border:1px solid rgb(170, 170, 170);
+    border-radius:5px;
+    font-size:14px;
+    color:rgb(88, 88, 88);
+}
+QComboBox#Combobox::down-arrow{
+    image:url(:/arrow/images/combobox_down.png);
+}
+QComboBox#Combobox::down-arrow:on{
+    image:url(:/arrow/images/combobox_up.png);
+}
+QComboBox#Combobox QAbstractItemView{
+     border:1px solid rgb(255, 146, 62);
+     selection-color:rgb(255, 255, 255);
+     selection-background-color:rgb(255, 146, 62);
+     color:rgb(00, 00, 00);
+}
+
+QComboBox#Combobox QAbstractItemView::item{
+        height:30px;
+}
+
+QComboBox#Combobox::drop-down{
+    width:20px;
+    border:none;
+}
+QComboBox#Combobox:on{
+    border:1px solid rgb(255, 146, 62);
+    border-top-left-radius:5px;
+    border-top-right-radius:5px;
+    border-bottom-left-radius:0px;
+    border-bottom-right-radius:0px;
+}
+
+QComboBox#Combobox:hover{
+    border:1px solid rgb(42, 42, 42);
+    color:rgb(42, 42, 42);
+}
+QComboBox#Combobox:disabled{
+    border:1px solid rgb(201, 201, 201);
+    color:rgb(225, 225, 225);
+}
+
+
+QLabel#LineHidden{
+    background: transparent;
+    color:rgb(183, 183, 183);
+    font-size: 14px;
+}
+
+QLineEdit#LineEditHidden{
+    background: transparent;
+    border: 0px;
+    color:rgb(88, 88, 88);
+    border-radius:5px;
+}
+
+
+QComboBox#ComboboxHidden{
+    background: transparent;
+    border:0px;
+    border-radius:5px;
+    font-size:14px;
+    color:rgb(88, 88, 88);
+}
+
+QComboBox#ComboboxHidden::down-arrow{
+    border-style:none;
+}
+QComboBox#ComboboxHidden::down-arrow:on{
+    border-style:none;
+}
+QComboBox#ComboboxHidden QAbstractItemView{
+     border:1px solid rgb(255, 146, 62);
+     selection-color:rgb(255, 255, 255);
+     selection-background-color:rgb(255, 146, 62);
+     color:rgb(00, 00, 00);
+}
+
+QComboBox#ComboboxHidden QAbstractItemView::item{
+        height:30px;
+}
+
+QComboBox#ComboboxHidden::drop-down{
+    width:20px;
+    border:none;
+}
+QComboBox#ComboboxHidden:on{
+    border:0px solid rgb(255, 146, 62);
+    border-top-left-radius:5px;
+    border-top-right-radius:5px;
+    border-bottom-left-radius:0px;
+    border-bottom-right-radius:0px;
+}
+

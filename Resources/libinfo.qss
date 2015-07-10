@@ -1,0 +1,48 @@
+﻿QWidget#TitleWidget{
+    background:transparent;
+    border-radius:5px;
+}
+
+QWidget#Title{
+    background:transparent;
+    border-bottom: 1px solid rgb(201, 201, 201);
+}
+
+QLabel#TitleLabel{
+    background: rgb(248, 248, 248);
+    border-bottom: 1px solid rgb(201, 201, 201);
+    border-top-left-radius:5px;
+    border-top-right-radius:5px;
+    font-size:24px;
+    color:rgb(168, 168, 168);    
+}
+
+QLabel#TotalLabel{
+	background: transparent;
+        font-size: 18px;
+	color: rgb(88, 88, 88);
+}
+
+QTableView#TotalTableView{
+        background: transparent;
+        border: 0px;
+}
+
+QPushButton#Button{
+    background-color: rgb(255, 255, 255);
+    border: 1px solid rgb(170, 170, 170);
+    color:rgb(88, 88, 88);
+    font-size:14px;
+    border-radius:5px;
+}
+QPushButton#Button:hover{
+    background-color:rgb(255, 255, 255);
+    border: 1px solid rgb(42, 42, 42);
+    color:rgb(42, 42, 42);
+}
+
+QPushButton#Button:pressed{
+    background-color: rgb(255, 146, 62);
+    border: 1px solid rgb(255, 146, 62);
+    color:rgb(255, 255, 255);
+}
