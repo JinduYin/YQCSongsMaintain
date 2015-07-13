@@ -13,9 +13,5 @@ int main(int argc, char *argv[])
     MainWidget w;
     w.show();
 
-    CurlUpload *curlDownlaod = new CurlUpload();
-    curlDownlaod->postJson("");
-
-
     return a.exec();
 }

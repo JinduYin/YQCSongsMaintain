@@ -1,4 +1,4 @@
-#ifndef SINGERQUERYWIDGET_H
+﻿#ifndef SINGERQUERYWIDGET_H
 #define SINGERQUERYWIDGET_H
 
 #include "defistruct.h"
@@ -29,6 +29,7 @@ public:
 public slots:
     void setActorValue();
     void setActorInfo(const int &row);
+    void deleteActor(const int &row);
 
 public:
     void getQueryCondition(ActorPagingQuery &argu);

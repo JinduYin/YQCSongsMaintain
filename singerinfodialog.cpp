@@ -226,7 +226,11 @@ void SingerInfoDialog::save()
         curlUpload->uploadActorImage(path);
 
         if(_sql->updateActor(sid, actor, info->actor))
+        {
             this->close();
+        }
+
+        delete curlUpload;
     }
 }
 

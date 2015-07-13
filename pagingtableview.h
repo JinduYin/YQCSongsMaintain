@@ -47,8 +47,7 @@ signals:
     void matchMusic(const int &row, int isMatch);
     void modify(const int &row);
     void dele(const int &row);
-    void add(const int &row);
-
+    void add(const int &row);    
 
 public slots:
     void update_View();
@@ -57,6 +56,7 @@ public:
     void setShowCheckBox();
     void initMediaDelegate(bool isBlack = true);
     void initActorDelegate(bool isBlack = true);
+    void setQueryActorDelegate();
     void setQueryMediaDelegate();
     void setFmDelegate();
     void setFmAddMusicDelegate(const QString &add_dele);

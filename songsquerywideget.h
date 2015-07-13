@@ -37,6 +37,8 @@ public slots:
     void setSongInfo(const int &row);
     void setMatchMusic(const int &row, const int &isMatch);
     void play(const int &row, const int &);
+    void deleteMedia(const int &row);
+
 public:
     void getQueryCondition(MediaPagingQuery &argu);
     void getValue(QSqlQuery &_query, Media &_media);

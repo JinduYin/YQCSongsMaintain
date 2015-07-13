@@ -375,6 +375,8 @@ void FmAddModifyDialog::uploadImage()
     QString path = lineEdit_listImage->text();
     CurlUpload *curlUpload = new CurlUpload();
     curlUpload->uploadFmImage(path);
+
+    delete curlUpload;
 }
 
 void FmAddModifyDialog::deleteMusic(const int &row)

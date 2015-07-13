@@ -37,6 +37,7 @@ SongsQueryWideget::SongsQueryWideget(QWidget *parent)
     connect(tableView_songsQuery, &PagingTableView::currentRow, this, &SongsQueryWideget::setSongInfo);
     connect(tableView_songsQuery, &PagingTableView::matchMusic, this, &SongsQueryWideget::setMatchMusic);
     connect(tableView_songsQuery, &PagingTableView::play, this, &SongsQueryWideget::play);
+    connect(tableView_songsQuery, &PagingTableView::dele, this, &SongsQueryWideget::deleteMedia);
 
     connect(comboBox_Language, SIGNAL(currentIndexChanged(QString)), this, SLOT(combobox_currentIndexChanged(QString)));
     connect(comboBox_type, SIGNAL(currentIndexChanged(QString)), this, SLOT(combobox_currentIndexChanged(QString)));
@@ -460,6 +461,29 @@ void SongsQueryWideget::play(const int &row, const int &)
     query.seek(row);
     QString path = query.value("_path").toString();   
     tableView_songsQuery->palyVideo(path);
+}
+
+void SongsQueryWideget::deleteMedia(const int &row)
+{
+    query.seek(row);
+    qint64 serial = query.value("_serial_id").toLongLong();
+    QString lyric = query.value("_lyric").toString();
+    QString path  = query.value("_path").toString();
+    QString name = query.value("_name").toString();
+
+    QString content = QString("确定删除: \n"
+                              "serial_id : %1 \n"
+                              "歌曲名： %2 ？").arg(serial).arg(name);
+    QMessageBox box(QMessageBox::Warning, "删除提示", content);
+    box.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+    box.setButtonText(QMessageBox::Ok, "确定");
+    box.setButtonText(QMessageBox::Cancel, "取消");
+
+    if(box.exec() == QMessageBox::Ok)
+    {
+        _sql->deleteMedia(serial, lyric, path);
+        setMediaValue();
+    }
 }
 
 void SongsQueryWideget::getValue(QSqlQuery &_query, Media &_media)

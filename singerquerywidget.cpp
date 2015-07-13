@@ -1,4 +1,4 @@
-#include "singerquerywidget.h"
+﻿#include "singerquerywidget.h"
 #include "pagingtableview.h"
 #include "typeindexvalue.h"
 #include "mysqlquery.h"
@@ -31,6 +31,7 @@ SingerQueryWidget::SingerQueryWidget(QWidget *parent)
 
     connect(tableView_singerQuery, &PagingTableView::updateView, this, &SingerQueryWidget::setActorValue);
     connect(tableView_singerQuery, &PagingTableView::currentRow, this, &SingerQueryWidget::setActorInfo);
+    connect(tableView_singerQuery, &PagingTableView::dele, this, &SingerQueryWidget::deleteActor);
 
     connect(comboBox_sex, SIGNAL(currentIndexChanged(QString)), this, SLOT(combobox_currentIndexChanged(QString)));
     connect(comboBox_nation, SIGNAL(currentIndexChanged(QString)), this, SLOT(combobox_currentIndexChanged(QString)));
@@ -205,7 +206,7 @@ void SingerQueryWidget::initWidgetValue()
     lineEdit_search->setPlaceholderText("歌星名称");
     pushButton_export_excel->setText("导出总表");
 
-    tableView_singerQuery->initActorDelegate(false);
+    tableView_singerQuery->setQueryActorDelegate();
     QRect rect = lineEdit_search->geometry();
     lineEdit_search->setTextMargins(0, 0, 20, 0);
     pushButton_search->setGeometry(rect.width()-20, 10, 14, 14);
@@ -254,6 +255,28 @@ void SingerQueryWidget::setActorInfo(const int &row)
     dialog->setValue(_actor);
 
     dialog->exec();
+}
+
+void SingerQueryWidget::deleteActor(const int &row)
+{
+    query.seek(row);
+    qint64 serial = query.value("_serial_id").toLongLong();
+    QString name = query.value("_name").toString();
+    int sid1 = query.value("_sid").toInt();
+    if(_sql->isSongOfSid(sid1))
+    {
+        QString content = QString("歌星名：%1 \n "
+                                  "歌星有对应歌曲，不能删除该歌星。").arg(name);
+        QMessageBox box(QMessageBox::Warning, "删除错误", content);
+        box.setStandardButtons(QMessageBox::Ok);
+        box.setButtonText(QMessageBox::Ok, "确定");
+        box.exec();
+    }
+    else
+    {
+        _sql->deleteActor(serial, name);
+        setActorValue();
+    }
 }
 
 void SingerQueryWidget::getQueryCondition(ActorPagingQuery &argu)

@@ -114,8 +114,8 @@ public:
 
 public:   
 
-    bool deleteActor(const int &sid, const Actor actor);
-    bool deleteMedia(const int &mid, const Media &media);
+    bool deleteActor(const qint64 &serial_id, const QString &actor);
+    bool deleteMedia(const qint64 &serial_id, const QString &lyric, QString &path);
 
     bool deleteMuchActor(const QStringList &sidM);
     bool deleteMuchMedia(const QStringList &midM);    
@@ -127,6 +127,8 @@ public:
 
     qint64 isActorSerialId(qint64 serialid); // -1不存在 存在返回最大值
     qint64 isMediaSerialId(qint64 serialid);
+
+    bool isSongOfSid(const int &sid_1);
 
 public:
     bool updateActor(const qint64 &sid, const Actor &actor, const Actor &oldActor);

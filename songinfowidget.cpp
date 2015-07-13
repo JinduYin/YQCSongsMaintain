@@ -1199,6 +1199,7 @@ QString SongInfoWidget::uploadV(const QString path)
     if(!retPath.isEmpty())
         lineEdit_upload_video->setText(retPath);
 
+    delete curlUpload;
     return retPath;
 }
 
@@ -1211,5 +1212,6 @@ QString SongInfoWidget::uploadL(const QString path)
         lineEdit_lyric->setText(retPath);
 
     QStringList list = retPath.split("/");
+    delete curlUpload;
     return list.last();
 }

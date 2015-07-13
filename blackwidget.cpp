@@ -1,4 +1,4 @@
-#include "blackwidget.h"
+﻿#include "blackwidget.h"
 #include "pagingtableview.h"
 #include "tablemodel.h"
 #include "mysqlquery.h"
@@ -29,7 +29,10 @@ BlackWidget::BlackWidget(QWidget *parent, int itemIndex)
 
 BlackWidget::~BlackWidget()
 {
-
+    if(curlDownlaod){
+        delete curlDownlaod;
+        curlDownlaod = NULL;
+    }
 }
 
 void BlackWidget::readAndSetStyleSheet()

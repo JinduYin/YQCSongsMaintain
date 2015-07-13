@@ -100,6 +100,13 @@ void ReleaseDialog::paintEvent(QPaintEvent *)
     opt.init(this);
     QPainter p(this);
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
+
+//    QRect rect  = this->geometry();
+//    QPainter painter(this);
+//    painter.setRenderHint(QPainter::Antialiasing, true);
+////    painter.setPen(QPen(Qt::red, Qt::SolidLine));
+//    painter.setBrush(QBrush(Qt::red, Qt::SolidPattern));
+//    painter.drawRect(rect);
 }
 
 void ReleaseDialog::initWidget()
@@ -113,6 +120,8 @@ void ReleaseDialog::initWidget()
     label_title = new QLabel(widgetTitle);
     lineedit_start = new QLineEdit(this);
     lineedit_end = new QLineEdit(this);
+
+    lineedit_pwd = new QLineEdit(this);
 
     pb_close = new QPushButton(widgetTitle);
     pb_release = new QPushButton(this);
@@ -142,6 +151,7 @@ void ReleaseDialog::initWidget()
     QVBoxLayout *bottom_layout = new QVBoxLayout();
     bottom_layout->addWidget(start_time);
     bottom_layout->addWidget(end_time);
+    bottom_layout->addWidget(lineedit_pwd);
     bottom_layout->addLayout(yes_layout);
     bottom_layout->setContentsMargins(20, 10, 20, 10);
     bottom_layout->setSpacing(10);
@@ -167,8 +177,10 @@ void ReleaseDialog::initWidgetValue()
     widgetTitle->setFixedHeight(50);
     lineedit_start->setPlaceholderText("开始日期");
     lineedit_end->setPlaceholderText("结束日期");
+    lineedit_pwd->setPlaceholderText("加密密码");
     pb_release->setText("确定");
 
+    lineedit_pwd->setFixedSize(180, 36);
     lineedit_start->setFixedSize(180, 36);
     lineedit_end->setFixedSize(180, 36);
     start_time->setFixedSize(180, 36);
@@ -184,7 +196,7 @@ void ReleaseDialog::initWidgetValue()
     pb_close->setObjectName("CloseButton");
 
 
-
+    lineedit_pwd->setObjectName("LineEdit");
     lineedit_start->setObjectName("LineEdit");
     lineedit_end->setObjectName("LineEdit");
     pushbutton_start->setObjectName("CalendarButton");
@@ -209,6 +221,16 @@ void ReleaseDialog::setTitle(const QString &str)
 
 void ReleaseDialog::release()
 {
+    QString pwd = lineedit_pwd->text();
+    if(pwd.isEmpty())
+    {
+        QMessageBox box(QMessageBox::Information, "提示", "必须设置加密密码。");
+        box.setStandardButtons(QMessageBox::Ok);
+        box.setButtonText(QMessageBox::Ok, "确定");
+        box.exec();
+        return;
+    }
+
     if(!setFilePath())
         return;
 
@@ -265,18 +287,34 @@ void ReleaseDialog::release()
        path.remove("music");
        QString temprel = path;       
        QString deststr = tempStr.remove(temprel);
-       if (!ZipAddFile(zf, deststr, fileNames.at(i), "default_yqc",  true))
+       if (!ZipAddFile(zf, deststr, fileNames.at(i),  pwd,  true)) //"default_yqc"
        {
            continue;
        }
    }
 
 
-   ///上传打包文件
-   ///
+   ///上传打包文件  
+   CurlUpload *curlUpload = new CurlUpload();
+   bool ok = curlUpload->uploadYQDyun(destName, destPath);
+
+   qDebug() << " upload yun : ok : " << ok;
 
    /// post 表格数据
-   ///
+   QDateTime time = QDateTime::currentDateTime();
+   QString timeStr = time.toString("yyyy-MM-dd hh:mm:ss");
+   int version = time.toTime_t();
+   QJsonObject  js;
+   js.insert("id", QJsonValue("_id_"));
+   js.insert("name", QJsonValue("_name_"));
+   js.insert("url", QJsonValue("_url_"));
+   js.insert("time", QJsonValue(timeStr));
+   js.insert("typename", QJsonValue("_1_"));
+   js.insert("remark", QJsonValue("_remark_"));
+   js.insert("version", QJsonValue(version));
+
+//   CurlUpload *curlDownlaod = new CurlUpload();
+//   curlDownlaod->postJson("");
 
    return;
 }
@@ -503,6 +541,8 @@ void ReleaseDialog::downloadImageFile(const QString &type, const QString &name)
     {
         curlDownlaod->download_jsonIm(type, name, filePath);
     }
+
+    delete curlDownlaod;
 }
 
 void ReleaseDialog::downloadVideoLyric(const QString &type, const QString &path)
@@ -534,7 +574,9 @@ void ReleaseDialog::downloadVideoLyric(const QString &type, const QString &path)
     if(!file.exists())
     {
         curlDownlaod->download_jsonVi(path, filePath);
-    }   
+    }
+
+    delete curlDownlaod;
 }
 
 QStringList ReleaseDialog::getCurrentDirFiles(const QString &path)

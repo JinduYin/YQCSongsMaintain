@@ -28,6 +28,8 @@ public:
 
     QString postJson(QString json);
 
+    bool uploadYQDyun(const QString &filename , const QString &localpath);
+
 private:
     QString getImgPath(QString filename);
     QString getUrl(QString filename);

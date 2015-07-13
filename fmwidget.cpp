@@ -550,6 +550,7 @@ void FMWidget::setFmImage(const QString &title, const int &_index)
     if (!file.exists()){
         CurlUpload *curlDownlaod = new CurlUpload();
         curlDownlaod->download_fmImage(title, filePath);
+        delete curlDownlaod;
     }
 
     if(_index == 1)

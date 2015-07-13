@@ -1,4 +1,5 @@
 ﻿#include "curlupload.h"
+#include "MD5.h"
 #include <QDebug>
 #include <QDir>
 #include <QFile>
@@ -7,6 +8,9 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QCoreApplication>
+#include <QMessageBox>
+#include <stdlib.h>
+using namespace std;
 extern "C"{
 #include "curl/curl.h"
 }
@@ -24,6 +28,9 @@ extern "C"{
 #define FM_TYPE "fm"
 #define POSTURL "http://192.168.1.199//upload.php"
 #define POSTFIELDS "?action=upload&method=post"
+
+const int CURL_LOW_SPEED_LIMIT = 64 * 1024;
+const int CURL_LOW_SPEED_TIME = 8;
 
 QString receiveData;
 size_t write_console(void *buffer, size_t size, size_t count, void *userp)
@@ -69,6 +76,12 @@ size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp)
   }
 
   return -1;                         /* no more data left to deliver */
+}
+
+
+size_t put_data(void *ptr,size_t size,size_t nmemb,void *userdata) //上传文件的回调函数
+{
+    return fread(ptr,size,nmemb,(FILE *)userdata);
 }
 
 CurlUpload::CurlUpload()
@@ -229,7 +242,7 @@ QString CurlUpload::postJson(QString json)
 //    QByteArray byte_array = document.toJson(QJsonDocument::Compact);
 //    byte_array.insert(0, "[");
 
-    QString testss("[{\"id\":\"_id_\",\"name\":\"_name_\",\"remark\":\"_remark_\",\"time\":\"2010-01-01\",\"typename\":\"_1_\",\"url\":\"_url_\",\"version\":\"_version_\"}]");
+    QString testss("[{\"id\":\"_id_\",\"name\":\"_name_\",\"remark\":\"_remark_\",\"time\":\"2010-01-01\",\"typename\":2,\"url\":\"_url_\",\"version\":123456}]");
     std::string stdStr = testss.toStdString();
     char szJsonData[1024];
     memset(szJsonData, 0, sizeof(szJsonData));
@@ -250,10 +263,14 @@ QString CurlUpload::postJson(QString json)
     qDebug() << " URL : " << url;
     qDebug() << " data :  " << szJsonData;
     // 设置http发送的内容类型为JSON
-    curl_slist *plist = curl_slist_append(NULL, "Content-Type:application/json;charset=UTF-8");
+    curl_slist *plist = curl_slist_append(NULL, "Content-Type:application/json;charset=UTF-8"); // multipart/form-data
+
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, FALSE);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5);
     curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, plist);
+//    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, plist);
+    curl_easy_setopt(curl, CURLOPT_HEADER, 0);
     curl_easy_setopt(curl, CURLOPT_POST, 1);
     // 设置要POST的JSON数据
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, szJsonData);
@@ -273,6 +290,103 @@ QString CurlUpload::postJson(QString json)
         receiveData.clear();
     }
     return returnStr;
+}
+
+bool CurlUpload::uploadYQDyun(const QString &filename , const QString &localpath)
+{
+
+    std::string username = "song";
+    std::string pwd = "yiqiding1314";
+    std::string buckname = "yiqichang-yun";
+    std::string api_url = "v0.api.upyun.com";
+
+    char time_str[15];
+    {
+        time_t now = time(NULL);
+        struct tm timeinfo;
+        localtime_s(&timeinfo, &now);
+        strftime(time_str,15,"%Y-%m-%d", &timeinfo);
+    }
+    std::string uri = "/" + buckname + "/" + time_str + "/" + filename.toStdString() ;
+
+    std::string date;
+    {
+        char mytime[100];
+        time_t lt =	::time(NULL);
+        struct tm ptm;
+        gmtime_s(&ptm , &lt);
+        strftime(mytime , 100 , "%a, %d %b %Y %H:%M:%S GMT" , &ptm);
+        date = mytime;
+    }
+
+
+    bool flag = true;
+
+    QFile file(localpath);
+    qint64 len = file.size();
+//    int len = localpath.length(); //文件本身大小
+    QString qlen = QString::number(len);
+    std::string strlen = qlen.toStdString();
+    MD5 md5("PUT&" + uri + "&" + date + "&" + strlen + "&" + MD5(pwd).hex());
+    std::string sign = md5.hex();
+    std::string hexpert = "Expect:";
+    std::string hdate = "Date: " + date;
+    std::string hauth = "Authorization: UpYun " + username + ":" + sign;
+    std::string hmdir = "mkdir: true";
+    struct curl_slist	 *headerlist = NULL;
+    CURL * curl = curl_easy_init();
+    headerlist = curl_slist_append(headerlist, hexpert.c_str());
+    headerlist = curl_slist_append(headerlist, hdate.c_str());
+    headerlist = curl_slist_append(headerlist, hauth.c_str());
+    headerlist = curl_slist_append(headerlist, hmdir.c_str());
+
+    QTextCodec *codec = QTextCodec::codecForName("GBK");
+    QByteArray pathB = codec->fromUnicode(localpath);
+    std::string localpath_std = pathB.toStdString();
+//    std::string localpath_std = localpath.toStdString();
+    FILE *fp = fopen(localpath_std.c_str() , "rb");
+    if(!fp)
+    {
+        QMessageBox::information(NULL, "提示", "文件打开失败。", QMessageBox::Yes);
+        return false;
+    }
+    uri = "http://v0.api.upyun.com" + uri;
+
+
+    curl_easy_setopt(curl, CURLOPT_URL,   uri.c_str());
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist);
+    curl_easy_setopt(curl, CURLOPT_PUT , true);
+//    curl_easy_setopt(curl , CURLOPT_INFILE , fp);
+    curl_easy_setopt(curl, CURLOPT_READFUNCTION, put_data);
+    curl_easy_setopt(curl, CURLOPT_READDATA, fp);
+
+    curl_easy_setopt(curl , CURLOPT_INFILESIZE , len);//
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_console);
+
+    curl_easy_setopt(curl , CURLOPT_LOW_SPEED_LIMIT , CURL_LOW_SPEED_LIMIT/1024);
+    curl_easy_setopt(curl , CURLOPT_LOW_SPEED_TIME , CURL_LOW_SPEED_TIME);
+    curl_easy_setopt(curl , CURLOPT_CONNECTTIMEOUT_MS , 3000);
+
+    CURLcode code =curl_easy_perform(curl);
+    if(code != CURLE_OK)
+    {
+        qDebug() << " ::: " << code;
+        flag = false;
+    }
+    if(code == CURLE_OK)
+    {
+        long retcode;
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE , &retcode);
+        if(retcode != 200)
+        {
+            flag = false;
+        }
+    }
+
+    curl_slist_free_all(headerlist);
+    curl_easy_cleanup(curl);
+    fclose(fp);
+    return flag;
 }
 
 QString CurlUpload::getImgPath(QString filename)

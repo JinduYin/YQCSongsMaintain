@@ -676,6 +676,8 @@ void SingerInfoWdiget::uploadImageOnline()
         CurlUpload *curlUpload = new CurlUpload();
         retPath = curlUpload->uploadActorImage(path);
         lineEdit_image_online->setText(retPath);
+
+        delete curlUpload;
     }
 }
 

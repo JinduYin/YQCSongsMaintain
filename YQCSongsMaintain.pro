@@ -33,9 +33,6 @@ SOURCES += main.cpp\
     curlupload.cpp \
     mysqlquery.cpp \
     yqcdelegate.cpp \
-    activitylabel.cpp \
-    pagingtablewidget.cpp \
-    addfmmedialist.cpp \
     dropshadowwidget.cpp \
     pushbutton.cpp \
     liblistview.cpp \
@@ -70,16 +67,14 @@ SOURCES += main.cpp\
     zlib128-dll/minizip/mztools.c \
     zlib128-dll/minizip/unzip.c \
     zlib128-dll/minizip/zip.c \
-    songslistaddmodifydialog.cpp
+    songslistaddmodifydialog.cpp \
+    MD5.cpp
 
 HEADERS  += \
     curlupload.h \
     enuminfo.h \
     mysqlquery.h \
     yqcdelegate.h \
-    activitylabel.h \
-    pagingtablewidget.h \
-    addfmmedialist.h \
     defistruct.h \
     dropshadowwidget.h \
     pushbutton.h \
@@ -127,7 +122,8 @@ HEADERS  += \
     zlib128-dll/minizip/mztools.h \
     zlib128-dll/minizip/unzip.h \
     zlib128-dll/minizip/zip.h \
-    songslistaddmodifydialog.h
+    songslistaddmodifydialog.h \
+    MD5.h
 
 FORMS    += \
     addfmmedialist.ui \

@@ -178,6 +178,8 @@ void SingerOnlineWidget::updateView(Actor actor)
     if (!file.exists()){
         CurlUpload *curlDownlaod = new CurlUpload();
         curlDownlaod->downloadActorImage(actor.name, filePath);
+
+        delete curlDownlaod;
     }
 
     QStringList list;
@@ -243,6 +245,8 @@ void SingerOnlineWidget::save()
         CurlUpload *curlUpload = new CurlUpload();
         retStr = curlUpload->uploadActorImage(path);
         widget_info->setImageOnlineRetPath(retStr);
+
+        delete curlUpload;
     }
 
     if(_sql->insertActor(actor))

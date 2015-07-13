@@ -66,7 +66,11 @@ PagingTableView::PagingTableView(QWidget *parent, bool alternate_background_colo
 
 PagingTableView::~PagingTableView()
 {
-
+    if(curlDownlaod)
+    {
+        delete curlDownlaod;
+        curlDownlaod = NULL;
+    }
 }
 
 
@@ -336,6 +340,28 @@ void PagingTableView::initActorDelegate(bool isBlack)
     model->setHorizontalHeaderList(headerList);
 }
 
+void PagingTableView::setQueryActorDelegate()
+{
+    if(isCheckBox)
+        tableView->setItemDelegateForColumn(0, m_checkBoxDelegate);
+
+    m_imageDelegate = new ImageDelegate(this);
+    ButtonDelegate *m_deleteDelegate = new ButtonDelegate(this);
+    m_deleteDelegate->setButtonText("删除");
+    m_cancelDelegate->setButtonText("详情");
+    tableView->verticalHeader()->setDefaultSectionSize(70);
+    tableView->setItemDelegateForColumn(1, m_imageDelegate);
+    tableView->setItemDelegateForColumn(5, m_cancelDelegate);
+    tableView->setItemDelegateForColumn(6, m_deleteDelegate);
+    connect(m_deleteDelegate, SIGNAL(currentRow(int)), this, SIGNAL(dele(int)));
+
+    QStringList headerList;
+    headerList << "SERIAL_ID" << "头像" << "歌星" << "性别" << "区域" << "详情" << "";
+
+    model->setHorizontalHeaderList(headerList);
+    model->refrushModel();
+}
+
 void PagingTableView::setQueryMediaDelegate()
 {
     IconDelegate *matchDelegate = new IconDelegate(this);
@@ -343,17 +369,22 @@ void PagingTableView::setQueryMediaDelegate()
     matchDelegate->setPixmapPressed(":/switch/images/switch_on.png");
     matchDelegate->setXY(20, 10);
 
+     ButtonDelegate *m_deleteDelegate = new ButtonDelegate(this);
+     m_deleteDelegate->setButtonText("删除");
+
     if(isCheckBox)
         tableView->setItemDelegateForColumn(0, m_checkBoxDelegate);
+    tableView->setItemDelegateForColumn(6, matchDelegate);
     tableView->setItemDelegateForColumn(7, m_playDelegate);
     tableView->setItemDelegateForColumn(8, m_cancelDelegate);
-    tableView->setItemDelegateForColumn(6, matchDelegate);
+    tableView->setItemDelegateForColumn(9, m_deleteDelegate);
     m_cancelDelegate->setButtonText("详情");
 //    connect(matchDelegate, &IconDelegate::currentRow, this, &PagingTableView::matchMusic);
     connect(matchDelegate, SIGNAL(currentRow(int,int)), this, SIGNAL(matchMusic(int,int)));
+    connect(m_deleteDelegate, SIGNAL(currentRow(int)), this, SIGNAL(dele(int)));
 
     QStringList headerList;
-    headerList << "MID" << "SERIAL_ID" << "歌曲名" << "歌星名" << "语种" << "分类" << "是否K歌" << "预览" << "详情";
+    headerList << "MID" << "SERIAL_ID" << "歌曲名" << "歌星名" << "语种" << "分类" << "是否K歌" << "预览" << "详情" << "";
 
     model->setHorizontalHeaderList(headerList);
     model->refrushModel();

@@ -217,7 +217,7 @@ bool MysqlQuery::queryMedia(const MediaPagingQuery &argu, const PagingQueryLimit
     QString queryStr = QString(
                         " select mm.serial_id as _serial_id, mm.name as _name, mm.singer as _singer, "
                         " mmll.detail as _language, tt.detail as _type, mm.original_track as _original_track, "
-                        " mm.sound_track as _sound_track, mm.enabled as _enabled, mm.path as _path, mm.mid as _mid "
+                        " mm.sound_track as _sound_track, mm.enabled as _enabled, mm.path as _path, mm.lyric as _lyric, mm.mid as _mid "
                         " from yiqiding_ktv.media as mm "
                         " left join yiqiding_ktv.media_language as mmll on mm.language = mmll.id "
                         " left join yiqiding_ktv.media_type as tt on mm.type = tt.id "
@@ -1391,28 +1391,36 @@ bool MysqlQuery::getActorSerial_id(const qint64 &sid, qint64 &serial_id)
     }
 }
 
-bool MysqlQuery::deleteActor(const int &sid, const Actor actor)
+bool MysqlQuery::deleteActor(const qint64 &serial_id, const QString &name)
 {
-    QString sqlstr;
+    QString sqlstr = QString("delete from  yiqiding_ktv.actor where serial_id = %1;").arg(serial_id);
+
+    QSqlQuery query;
+    if(!query.exec(sqlstr))
+        return false;
 
     QJsonObject  json;
     json.insert("sql", sqlstr);
-    json.insert("serial_id", QJsonValue(actor.serial_id.toLongLong()));
-    json.insert("name", actor.name);
+    json.insert("serial_id", QJsonValue(serial_id));
+    json.insert("name", name);
     json.insert("op", "delete");
     json.insert("type", QJsonValue(101));
     JsonFile(json);
 }
 
-bool MysqlQuery::deleteMedia(const int &mid, const Media &media)
+bool MysqlQuery::deleteMedia(const qint64 &serial_id, const QString &lyric, QString &path)
 {
-    QString sqlstr;
+    QString sqlstr = QString("delete from  yiqiding_ktv.media where serial_id = %1;").arg(serial_id);
+
+    QSqlQuery query;
+    if(!query.exec(sqlstr))
+        return false;
 
     QJsonObject  json;
     json.insert("sql", sqlstr);
-    json.insert("serial_id", QJsonValue(media.serial_id.toLongLong()));
-    json.insert("lyric", media.lyric);
-    json.insert("path", media.path);
+    json.insert("serial_id", QJsonValue(serial_id));
+    json.insert("lyric", lyric);
+    json.insert("path", path);
     json.insert("op", "delete");
     json.insert("type", QJsonValue(100));
     JsonFile(json);
@@ -1724,6 +1732,23 @@ qint64 MysqlQuery::isMediaSerialId(qint64 serialid)
          }
     }
     return -1;
+}
+
+bool MysqlQuery::isSongOfSid(const int &sid)
+{
+    QSqlQuery query;
+    QString str = QString(" SELECT serial_id, name, language, type, singer, artist_sid_1, artist_sid_2 "
+                          " FROM yiqiding_ktv.media "
+                          " where artist_sid_1 = %1 or or artist_sid_2 = %1 ;")
+                         .arg(sid);
+
+    if(query.exec(str))
+    {
+        if(query.size() > 1)
+            return true;
+    }
+
+    return false;
 }
 
 bool MysqlQuery::updateMediaBlack(const int &mid, int black)
