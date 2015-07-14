@@ -295,8 +295,9 @@ void ReleaseDialog::release()
 
 
    ///上传打包文件  
+   QString url;
    CurlUpload *curlUpload = new CurlUpload();
-   bool ok = curlUpload->uploadYQDyun(destName, destPath);
+   bool ok = curlUpload->uploadYQDyun(destName, destPath, url);
 
    qDebug() << " upload yun : ok : " << ok;
 
@@ -305,16 +306,20 @@ void ReleaseDialog::release()
    QString timeStr = time.toString("yyyy-MM-dd hh:mm:ss");
    int version = time.toTime_t();
    QJsonObject  js;
-   js.insert("id", QJsonValue("_id_"));
-   js.insert("name", QJsonValue("_name_"));
-   js.insert("url", QJsonValue("_url_"));
+   js.insert("id", QJsonValue(""));
+   js.insert("name", QJsonValue(destName));
+   js.insert("url", QJsonValue(url));
    js.insert("time", QJsonValue(timeStr));
-   js.insert("typename", QJsonValue("_1_"));
-   js.insert("remark", QJsonValue("_remark_"));
+   js.insert("typename", QJsonValue(""));
+   js.insert("remark", QJsonValue(pwd));
    js.insert("version", QJsonValue(version));
 
-//   CurlUpload *curlDownlaod = new CurlUpload();
-//   curlDownlaod->postJson("");
+   QJsonDocument document;
+   document.setObject(js);
+   QByteArray byte_array = document.toJson(QJsonDocument::Compact);
+
+   CurlUpload *curlDownlaod = new CurlUpload();
+   curlDownlaod->postJson(byte_array);
 
    return;
 }

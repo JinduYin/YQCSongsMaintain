@@ -68,7 +68,8 @@ SOURCES += main.cpp\
     zlib128-dll/minizip/unzip.c \
     zlib128-dll/minizip/zip.c \
     songslistaddmodifydialog.cpp \
-    MD5.cpp
+    MD5.cpp \
+    stafflogin.cpp
 
 HEADERS  += \
     curlupload.h \
@@ -123,11 +124,13 @@ HEADERS  += \
     zlib128-dll/minizip/unzip.h \
     zlib128-dll/minizip/zip.h \
     songslistaddmodifydialog.h \
-    MD5.h
+    MD5.h \
+    stafflogin.h
 
 FORMS    += \
     addfmmedialist.ui \
-    MP4Player.ui
+    MP4Player.ui \
+    stafflogin.ui
 
 RESOURCES += \    
     Resources\YQCML.qrc
@@ -153,6 +156,7 @@ DISTFILES += \
 
 #INCLUDEPATH += $$PWD/quazip-0.7.1/include
 #DEPENDPATH += $$PWD/quazip-0.7.1/include
+
 
 
 

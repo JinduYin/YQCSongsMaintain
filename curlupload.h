@@ -7,6 +7,7 @@ extern "C"{
 class QString;
 class QPixmap;
 class QByteArray;
+class QJsonObject;
 class CurlUpload
 {
 public:
@@ -26,9 +27,9 @@ public:
     QString uploadMediaVideo(const QString videoPath);
     QString uploadMedialyric(const QString lyricPath);
 
-    QString postJson(QString json);
+    QString postJson(const QByteArray &json);
 
-    bool uploadYQDyun(const QString &filename , const QString &localpath);
+    bool uploadYQDyun(const QString &filename , const QString &localpath, QString &url);
 
 private:
     QString getImgPath(QString filename);

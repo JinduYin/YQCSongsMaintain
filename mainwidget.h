@@ -1,4 +1,4 @@
-#ifndef MAINWIDGET_H
+﻿#ifndef MAINWIDGET_H
 #define MAINWIDGET_H
 
 #include <QSqlTableModel>
@@ -71,7 +71,7 @@ private:
     BlackWidget *singer_black;
     ListInfoWidget *songs_Info;
     ListInfoWidget *singer_Info;
-    ListInfoWidget *list_Info;
+    ListInfoWidget *list_Info;    
 
     int desktopWidth;
     int desktopHeight;

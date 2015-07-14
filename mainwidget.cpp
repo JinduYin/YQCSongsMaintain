@@ -3,6 +3,7 @@
 #include "enuminfo.h"
 #include "mysqlquery.h"
 #include "pagingtableview.h"
+#include "stafflogin.h"
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QLineEdit>
@@ -94,7 +95,6 @@ MainWidget::MainWidget(QWidget *parent)
     stacked_widget->insertWidget(stacked_setmediainfo, songs_Info);
     stacked_widget->insertWidget(stacked_setactorinfo, singer_Info);
     stacked_widget->insertWidget(stacked_setlistinfo, list_Info);
-
 }
 
 MainWidget::~MainWidget()

@@ -219,7 +219,7 @@ QString CurlUpload::uploadMedialyric(const QString lyricPath)
     return returnStr;
 }
 
-QString CurlUpload::postJson(QString json)
+QString CurlUpload::postJson(const QByteArray &json)
 {
     QSettings *initConfig = new QSettings("SongsMaintain.conf", QSettings::IniFormat);
     initConfig->setIniCodec("UTF-8");
@@ -228,18 +228,6 @@ QString CurlUpload::postJson(QString json)
     QByteArray array = urlStr.toLocal8Bit();
     const char *url = array.data();
 
-    QJsonObject  js;
-    js.insert("id", QJsonValue("_id_"));
-    js.insert("name", QJsonValue("_name_"));
-    js.insert("url", QJsonValue("_url_"));
-    js.insert("time", QJsonValue("2010-01-01"));
-    js.insert("typename", QJsonValue("_1_"));
-    js.insert("remark", QJsonValue("_remark_"));
-    js.insert("version", QJsonValue("_version_"));
-
-//    QJsonDocument document;
-//    document.setObject(js);
-//    QByteArray byte_array = document.toJson(QJsonDocument::Compact);
 //    byte_array.insert(0, "[");
 
     QString testss("[{\"id\":\"_id_\",\"name\":\"_name_\",\"remark\":\"_remark_\",\"time\":\"2010-01-01\",\"typename\":2,\"url\":\"_url_\",\"version\":123456}]");
@@ -292,7 +280,7 @@ QString CurlUpload::postJson(QString json)
     return returnStr;
 }
 
-bool CurlUpload::uploadYQDyun(const QString &filename , const QString &localpath)
+bool CurlUpload::uploadYQDyun(const QString &filename , const QString &localpath, QString &url)
 {
 
     std::string username = "song";
@@ -352,7 +340,7 @@ bool CurlUpload::uploadYQDyun(const QString &filename , const QString &localpath
     }
     uri = "http://v0.api.upyun.com" + uri;
 
-
+    url = QString(uri.c_str());
     curl_easy_setopt(curl, CURLOPT_URL,   uri.c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist);
     curl_easy_setopt(curl, CURLOPT_PUT , true);

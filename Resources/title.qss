@@ -150,3 +150,8 @@ QPushButton#CalendarButton:hover{
 QPushButton#CalendarButton:pressed{
     border-image:url(":/other/images/calendar_pressed.png");
 }
+
+StaffLogin#login{
+    border:0px;
+    border-image:url(":/login/images/login_bg.png");
+}
