@@ -49,6 +49,9 @@ private:
     void initSingblack();
     void initSingerBlack();
 
+public:
+    static bool isIntOfStr(const QString &str);
+
 private:
     QRect location;    
     LibListView *listView;

@@ -63,6 +63,7 @@ private:
     QDateEdit *end_time;
     QDateTime currentDate;
 
+    QLineEdit *lineedit_name;
     QLineEdit *lineedit_pwd;
     QLineEdit *lineedit_start;
     QLineEdit *lineedit_end;

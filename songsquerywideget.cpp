@@ -3,6 +3,7 @@
 #include "mysqlquery.h"
 #include "tablemodel.h"
 #include "songinfodialog.h"
+#include "mainwidget.h"
 #include <QFile>
 #include <QLabel>
 #include <QPainter>
@@ -579,11 +580,30 @@ void SongsQueryWideget::export_excel_clicked()
 void SongsQueryWideget::search_singer_clicked()
 {
     QMessageBox::aboutQt(this, "歌星搜索");
+    bool isInt = MainWidget::isIntOfStr(lineEdit_searchSinger->text());
+    if(isInt)
+    {
+        qint64 serial_id = lineEdit_searchSinger->text().toLongLong();
+//        _sql->queryActorOfSerialId(serial_id, )
+    }
+    else
+    {
+        ///歌名搜索
+    }
 }
 
 void SongsQueryWideget::search_song_clicked()
 {
     QMessageBox::aboutQt(this, "歌曲搜索");
+    bool isInt = MainWidget::isIntOfStr(lineEdit_searchSong->text());
+    if(isInt)
+    {
+        ///serial search
+    }
+    else
+    {
+        ///歌名搜索
+    }
 }
 
 void SongsQueryWideget::calendar_start_clicked(bool checked)

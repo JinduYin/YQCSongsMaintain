@@ -174,7 +174,7 @@ void SingerAddModifyDialog::serachMusic()
         return;
 
     _querySearch.clear();
-    if(_sql->querySingeSearch(str, _querySearch)){
+    if(_sql->querySingerSearch(str, _querySearch)){
         view_addMusic->showUploadSingerAddModityData(_querySearch, paths);
     }
 }

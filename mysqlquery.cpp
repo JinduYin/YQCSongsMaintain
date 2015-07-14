@@ -542,7 +542,7 @@ bool MysqlQuery::querySongOrSingerSearch(const QString argu, QSqlQuery &query)
     return querySql(sqlStr, query);
 }
 
-bool MysqlQuery::querySingeSearch(const QString &name, QSqlQuery &query)
+bool MysqlQuery::querySingerSearch(const QString &name, QSqlQuery &query)
 {
     QString queryStr = QString(
                         " select "
@@ -558,13 +558,58 @@ bool MysqlQuery::querySingeSearch(const QString &name, QSqlQuery &query)
                         .arg(name);
 
     qDebug() << " add singer sql :  " << queryStr;
-//   QSqlQuery _query;
-//   if(_query.exec(queryStr)){
-//        query = _query;
-//        return true;
-//    }
-//    else
-//        return false;
+
+    return querySql(queryStr, query);
+}
+
+bool MysqlQuery::querySongSearch(const QString &name, QSqlQuery &query)
+{
+    QString queryStr = QString(
+                " select mm.serial_id as _serial_id, mm.name as _name, mm.singer as _singer, "
+                " mmll.detail as _language, tt.detail as _type, mm.original_track as _original_track, "
+                " mm.sound_track as _sound_track, mm.enabled as _enabled, mm.path as _path, mm.lyric as _lyric, mm.mid as _mid "
+                " from yiqiding_ktv.media as mm "
+                " left join yiqiding_ktv.media_language as mmll on mm.language = mmll.id "
+                " left join yiqiding_ktv.media_type as tt on mm.type = tt.id "
+                " where mm.name like '%%1%' or mm.pinyin like '%%1%' "
+                " order by mm.serial_id desc ;")
+            .arg(name);
+
+    return querySql(queryStr, query);
+}
+
+bool MysqlQuery::querySongSearch_serial_id(qint64 serial_id, QSqlQuery &query)
+{
+    QString queryStr = QString(
+                " select mm.serial_id as _serial_id, mm.name as _name, mm.singer as _singer, "
+                " mmll.detail as _language, tt.detail as _type, mm.original_track as _original_track, "
+                " mm.sound_track as _sound_track, mm.enabled as _enabled, mm.path as _path, mm.lyric as _lyric, mm.mid as _mid "
+                " from yiqiding_ktv.media as mm "
+                " left join yiqiding_ktv.media_language as mmll on mm.language = mmll.id "
+                " left join yiqiding_ktv.media_type as tt on mm.type = tt.id "
+                " where mm.serial_id = %1 ;")
+            .arg(serial_id);
+
+    return querySql(queryStr, query);
+}
+
+bool MysqlQuery::querySingerSearch_serial_id(qint64 serial_id, QSqlQuery &query)
+{
+    QString queryStr = QString(
+                        " select "
+                        " aa.serial_id as _serial_id, aa.name as _name, "
+                        " aass.detail as _sex, aann.detail as _nation, "
+                        " aa.pinyin as _pinyin, aa.words as _words,  "
+                        " aa.enabled as _enabled, aa.sid as _sid "
+                        " from yiqiding_ktv.actor as aa "
+                        " left join yiqiding_ktv.actor_sex as aass on aa.sex = aass.id "
+                        " left join yiqiding_ktv.actor_nation as aann on aa.nation = aann.id "
+                        " where aa.serial_id = %1 "
+                        " order by aa.serial_id desc;")
+                        .arg(serial_id);
+
+    qDebug() << " search sql :  " << queryStr;
+
     return querySql(queryStr, query);
 }
 

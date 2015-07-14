@@ -122,6 +122,7 @@ void ReleaseDialog::initWidget()
     lineedit_end = new QLineEdit(this);
 
     lineedit_pwd = new QLineEdit(this);
+    lineedit_name = new QLineEdit(this);
 
     pb_close = new QPushButton(widgetTitle);
     pb_release = new QPushButton(this);
@@ -152,6 +153,7 @@ void ReleaseDialog::initWidget()
     bottom_layout->addWidget(start_time);
     bottom_layout->addWidget(end_time);
     bottom_layout->addWidget(lineedit_pwd);
+    bottom_layout->addWidget(lineedit_name);
     bottom_layout->addLayout(yes_layout);
     bottom_layout->setContentsMargins(20, 10, 20, 10);
     bottom_layout->setSpacing(10);
@@ -178,8 +180,11 @@ void ReleaseDialog::initWidgetValue()
     lineedit_start->setPlaceholderText("开始日期");
     lineedit_end->setPlaceholderText("结束日期");
     lineedit_pwd->setPlaceholderText("加密密码");
+    lineedit_pwd->setEchoMode(QLineEdit::Password);
+    lineedit_name->setPlaceholderText("版本信息");
     pb_release->setText("确定");
 
+    lineedit_name->setFixedSize(180, 36);
     lineedit_pwd->setFixedSize(180, 36);
     lineedit_start->setFixedSize(180, 36);
     lineedit_end->setFixedSize(180, 36);
@@ -196,6 +201,7 @@ void ReleaseDialog::initWidgetValue()
     pb_close->setObjectName("CloseButton");
 
 
+    lineedit_name->setObjectName("LineEdit");
     lineedit_pwd->setObjectName("LineEdit");
     lineedit_start->setObjectName("LineEdit");
     lineedit_end->setObjectName("LineEdit");
@@ -222,14 +228,23 @@ void ReleaseDialog::setTitle(const QString &str)
 void ReleaseDialog::release()
 {
     QString pwd = lineedit_pwd->text();
-    if(pwd.isEmpty())
+    QString name = lineedit_name->text();
+    if(pwd.isEmpty() || name.isEmpty() || name.size() > 16)
     {
-        QMessageBox box(QMessageBox::Information, "提示", "必须设置加密密码。");
+        QString prompt;
+        prompt = QString("必须设置加密密码\n填写版本信息。");
+        if(name.size() > 16)
+            prompt = QString("版本信息不能超过16个字符。");
+        QMessageBox box(QMessageBox::Information, "提示", prompt);
         box.setStandardButtons(QMessageBox::Ok);
         box.setButtonText(QMessageBox::Ok, "确定");
         box.exec();
         return;
     }
+
+    ////name 最大16个字符
+
+
 
     if(!setFilePath())
         return;
@@ -248,25 +263,13 @@ void ReleaseDialog::release()
     QDir dir(destPath);
     if(!dir.exists())
         dir.mkpath(destPath);
-    QString destName = currentDate.toString("yyyy-MM-dd");
+    QString destName = currentDate.toString("yyyy-MM-dd_hh_mm_ss");
     destName.append(".zip");
     destPath.append(destName);
 
     QFile destFile(destPath);
     if(destFile.exists())
     {
-        QString title("文件重复");
-        QString content = QString("文件：%1 \n"
-                                  "已经存在，是否覆盖？").arg(destName);
-        QMessageBox box(QMessageBox::Warning, title, content);
-        box.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
-        box.setButtonText(QMessageBox::Ok, "确定");
-        box.setButtonText(QMessageBox::Cancel, "取消");
-
-        if(box.exec() == QMessageBox::Cancel)
-        {
-            return;
-        }
     }
 
     zipFile zf;
@@ -279,13 +282,13 @@ void ReleaseDialog::release()
         return;
     }
 
-   LOKI_ON_BLOCK_EXIT(zipClose, zf, (const char *)NULL);
+//   LOKI_ON_BLOCK_EXIT(zipClose, zf, (const char *)NULL);
    for (int i=0; i<fileNames.size(); i++)
    {
        QString tempStr = fileNames.at(i);
        QString path = releasePath;
        path.remove("music");
-       QString temprel = path;       
+       QString temprel = path;
        QString deststr = tempStr.remove(temprel);
        if (!ZipAddFile(zf, deststr, fileNames.at(i),  pwd,  true)) //"default_yqc"
        {
@@ -293,33 +296,32 @@ void ReleaseDialog::release()
        }
    }
 
+   int errclose = zipClose(zf, NULL);
+   if (errclose != ZIP_OK)
+       qDebug() << " zipClose ret : " << errclose;
 
-   ///上传打包文件  
+   ///上传打包文件
    QString url;
    CurlUpload *curlUpload = new CurlUpload();
    bool ok = curlUpload->uploadYQDyun(destName, destPath, url);
 
    qDebug() << " upload yun : ok : " << ok;
-
+   qDebug() << " zip name " << destName;
+   qDebug() << " url " << url;
    /// post 表格数据
    QDateTime time = QDateTime::currentDateTime();
-   QString timeStr = time.toString("yyyy-MM-dd hh:mm:ss");
+   QString timeStr = time.toString("yyyy-MM-dd-hh-mm-ss");
    int version = time.toTime_t();
-   QJsonObject  js;
-   js.insert("id", QJsonValue(""));
-   js.insert("name", QJsonValue(destName));
-   js.insert("url", QJsonValue(url));
-   js.insert("time", QJsonValue(timeStr));
-   js.insert("typename", QJsonValue(""));
-   js.insert("remark", QJsonValue(pwd));
-   js.insert("version", QJsonValue(version));
+   QString postStr = QString("name=%1&url=%2&time=%3&remark=%4&version=%5")
+                            .arg(name)
+                            .arg(url)
+                            .arg(timeStr)
+                            .arg(pwd)
+                            .arg(version);
 
-   QJsonDocument document;
-   document.setObject(js);
-   QByteArray byte_array = document.toJson(QJsonDocument::Compact);
 
    CurlUpload *curlDownlaod = new CurlUpload();
-   curlDownlaod->postJson(byte_array);
+   curlDownlaod->postJson(postStr);
 
    return;
 }
@@ -394,19 +396,8 @@ void ReleaseDialog::readJsonFile(const QString &path)
         return;
     }
 
-    QString text;
-    QStringList contents;
+    QString text;    
     QTextStream in(&file);
-//    do{
-//        text = in.readLine();
-//        if(!text.isEmpty()){
-//            text.remove(text.size()-1, 1);
-
-//            downloadFiles(text);
-////            contents.append(text);
-//        }
-//    }while(!text.isNull());
-
     while(!in.atEnd()){
         text = in.readLine();
         if(!text.isEmpty()){
@@ -414,8 +405,7 @@ void ReleaseDialog::readJsonFile(const QString &path)
 
             downloadFiles(text);
         }
-    }
-
+    }    
     file.close();
 }
 
@@ -472,12 +462,16 @@ void ReleaseDialog::downloadFiles(const QString json)
             }
             else if(type == media) ////media
             {
-                if(op.compare("insert") == 0 || op.compare("delete") == 0)
+                if(op.compare("insert") == 0)
                 {
                    QString lyric = json.take("lyric").toString();
                    QString path = json.take("path").toString();
                    downloadVideoLyric(LYRIC_TYPE, lyric);
                    downloadVideoLyric(MP4_TYPE, path);
+                }
+                else if(op.compare("delete") == 0)
+                {
+
                 }
                 else if(op.compare("update") == 0)
                 {
@@ -485,41 +479,49 @@ void ReleaseDialog::downloadFiles(const QString json)
                     QString new_lyric = json.take("new_lyric").toString();
                     QString old_path = json.take("old_path").toString();
                     QString new_path = json.take("new_path").toString();
-                    downloadVideoLyric(LYRIC_TYPE, old_lyric);
-                    downloadVideoLyric(LYRIC_TYPE, new_lyric);
-                    downloadVideoLyric(MP4_TYPE, old_path);
-                    downloadVideoLyric(MP4_TYPE, new_path);
+
+                    if(old_lyric.compare(new_lyric) != 0)
+                        downloadVideoLyric(LYRIC_TYPE, new_lyric);
+                    if(old_path.compare(new_path) != 0)
+                        downloadVideoLyric(MP4_TYPE, new_path);
                 }
             }
             else if(type == actor) ///
             {
-                if(op.compare("insert") == 0 || op.compare("delete") == 0)
+                if(op.compare("insert") == 0)
                 {
                    QString name = json.take("name").toString();
                    downloadImageFile(ACTOR_TYPE_IMAGE, name);
+                }
+                else if(op.compare("delete") == 0)
+                {
+
                 }
                 else if(op.compare("update") == 0)
                 {
                     QString old_name = json.take("old_name").toString();
                     QString new_name = json.take("new_name").toString();
-                    downloadImageFile(ACTOR_TYPE_IMAGE, old_name);
-                    downloadImageFile(ACTOR_TYPE_IMAGE, new_name);
+                    if(old_name.compare(new_name) != 0)
+                        downloadImageFile(ACTOR_TYPE_IMAGE, new_name);
                 }
             }
             else if(type == songlist)
             {
-                if(op.compare("insert") == 0 || op.compare("delete") == 0)
+                if(op.compare("insert") == 0)
                 {
                    QString title = json.take("title").toString();
                    downloadImageFile(FM_TYPE_IMAGE, title);
+                }
+                else if(op.compare("delete") == 0)
+                {
+
                 }
                 else if(op.compare("update") == 0)
                 {
                     QString old_title = json.take("old_title").toString();
                     QString new_title = json.take("new_title").toString();
-                    downloadImageFile(FM_TYPE_IMAGE, old_title);
-                    downloadImageFile(FM_TYPE_IMAGE, new_title);
-
+                    if(old_title.compare(new_title) != 0)
+                        downloadImageFile(FM_TYPE_IMAGE, new_title);
                 }
             }
             else if(type == other)
@@ -602,7 +604,8 @@ QStringList ReleaseDialog::getCurrentDirFiles(const QString &path)
 
         if(dirlist.size() <= 0)
         {
-            list.append(path);
+//            list.append(path);
+//            list.append("/");
         }
         else
         {
@@ -795,3 +798,16 @@ void ReleaseDialog::setEndDateTime()
     lineedit_end->setText(date);
 }
 
+
+//QString title("文件重复");
+//QString content = QString("文件：%1 \n"
+//                          "已经存在，是否覆盖？").arg(destName);
+//QMessageBox box(QMessageBox::Warning, title, content);
+//box.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+//box.setButtonText(QMessageBox::Ok, "确定");
+//box.setButtonText(QMessageBox::Cancel, "取消");
+
+//if(box.exec() == QMessageBox::Cancel)
+//{
+//    return;
+//}

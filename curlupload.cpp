@@ -219,7 +219,7 @@ QString CurlUpload::uploadMedialyric(const QString lyricPath)
     return returnStr;
 }
 
-QString CurlUpload::postJson(const QByteArray &json)
+QString CurlUpload::postJson(const QString &json)
 {
     QSettings *initConfig = new QSettings("SongsMaintain.conf", QSettings::IniFormat);
     initConfig->setIniCodec("UTF-8");
@@ -228,14 +228,12 @@ QString CurlUpload::postJson(const QByteArray &json)
     QByteArray array = urlStr.toLocal8Bit();
     const char *url = array.data();
 
-//    byte_array.insert(0, "[");
-
-    QString testss("[{\"id\":\"_id_\",\"name\":\"_name_\",\"remark\":\"_remark_\",\"time\":\"2010-01-01\",\"typename\":2,\"url\":\"_url_\",\"version\":123456}]");
-    std::string stdStr = testss.toStdString();
+//    QString testss("name=muddsic&remark=sdfasf&time=2015-07-14&url=http://www.dd.se&version=1436863884");
+//    std::string stdStr = testss.toStdString();
+    std::string stdStr = json.toStdString();
     char szJsonData[1024];
     memset(szJsonData, 0, sizeof(szJsonData));
     strcpy(szJsonData, stdStr.c_str());
-
 
     CURL *curl = NULL;
     CURLcode res;
@@ -250,19 +248,12 @@ QString CurlUpload::postJson(const QByteArray &json)
 
     qDebug() << " URL : " << url;
     qDebug() << " data :  " << szJsonData;
-    // 设置http发送的内容类型为JSON
-    curl_slist *plist = curl_slist_append(NULL, "Content-Type:application/json;charset=UTF-8"); // multipart/form-data
 
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, FALSE);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5);
     curl_easy_setopt(curl, CURLOPT_URL, url);
-//    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, plist);
-    curl_easy_setopt(curl, CURLOPT_HEADER, 0);
     curl_easy_setopt(curl, CURLOPT_POST, 1);
-    // 设置要POST的JSON数据
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, szJsonData);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_console);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_console);    
     res = curl_easy_perform(curl);
     if(res != CURLE_OK)
     {
@@ -288,15 +279,9 @@ bool CurlUpload::uploadYQDyun(const QString &filename , const QString &localpath
     std::string buckname = "yiqichang-yun";
     std::string api_url = "v0.api.upyun.com";
 
-    char time_str[15];
-    {
-        time_t now = time(NULL);
-        struct tm timeinfo;
-        localtime_s(&timeinfo, &now);
-        strftime(time_str,15,"%Y-%m-%d", &timeinfo);
-    }
-    std::string uri = "/" + buckname + "/" + time_str + "/" + filename.toStdString() ;
 
+    std::string uri = "/" + buckname + "/music/" + filename.toStdString() ;
+    url = QString(uri.c_str());
     std::string date;
     {
         char mytime[100];
@@ -340,7 +325,6 @@ bool CurlUpload::uploadYQDyun(const QString &filename , const QString &localpath
     }
     uri = "http://v0.api.upyun.com" + uri;
 
-    url = QString(uri.c_str());
     curl_easy_setopt(curl, CURLOPT_URL,   uri.c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist);
     curl_easy_setopt(curl, CURLOPT_PUT , true);
@@ -358,7 +342,7 @@ bool CurlUpload::uploadYQDyun(const QString &filename , const QString &localpath
     CURLcode code =curl_easy_perform(curl);
     if(code != CURLE_OK)
     {
-        qDebug() << " ::: " << code;
+        qDebug() << " curl 错误返回：  " << code;
         flag = false;
     }
     if(code == CURLE_OK)

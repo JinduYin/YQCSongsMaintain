@@ -27,7 +27,7 @@ public:
     QString uploadMediaVideo(const QString videoPath);
     QString uploadMedialyric(const QString lyricPath);
 
-    QString postJson(const QByteArray &json);
+    QString postJson(const QString &json);
 
     bool uploadYQDyun(const QString &filename , const QString &localpath, QString &url);
 

@@ -48,8 +48,12 @@ public:
     bool queryActorBlack(const PagingQueryLimitArgu &limitArg, QSqlQuery &query); ///
     bool queryMediaBlackSearch(const QString argu, QSqlQuery &query);
     bool queryActorBlackSearch(const QString argu, QSqlQuery &query);
+
     bool querySongOrSingerSearch(const QString argu, QSqlQuery &query);
-    bool querySingeSearch(const QString &name, QSqlQuery &query);
+    bool querySingerSearch(const QString &name, QSqlQuery &query);//歌星名或拼音
+    bool querySongSearch(const QString &name, QSqlQuery &query);
+    bool querySongSearch_serial_id(qint64 serial_id, QSqlQuery &query);
+    bool querySingerSearch_serial_id(qint64 serial_id, QSqlQuery &query);
 
     bool queryFMSongList(QSqlQuery &query);
     bool queryFMSongListDetail(const qint64 &lid, QSqlQuery &query);    

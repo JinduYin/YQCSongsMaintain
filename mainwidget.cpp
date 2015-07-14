@@ -256,6 +256,16 @@ void MainWidget::initSingerBlack()
     singer_black->initBlack_Actor();
 }
 
+bool MainWidget::isIntOfStr(const QString &str)
+{
+    for (int i=0; i<str.size(); i++)
+    {
+        if(str.at(i) < '0' || str.at(i) > '9')
+            return false;
+    }
+    return true;
+}
+
 void MainWidget::paintEvent(QPaintEvent *event)
 {    
     DropShadowWidget::paintEvent(event);
