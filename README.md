@@ -1,2 +1,3 @@
 # YQCSongsMaintain
- 曲库工具
+QT 项目
+曲库工具
